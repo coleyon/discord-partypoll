@@ -25,6 +25,8 @@ async def echo(ctx):
 @bot.event
 async def on_reaction_add(reaction, user):
     # author = reaction.message.author
+    if user.id == bot.user.id:
+        return
     channel = reaction.message.channel
     await channel.send(
         "{u}さんがmessageid={id}にリアクション{r}をつけました".format(
@@ -35,6 +37,8 @@ async def on_reaction_add(reaction, user):
 
 @bot.event
 async def on_reaction_remove(reaction, user):
+    if user.id == bot.user.id:
+        return
     channel = reaction.message.channel
     await channel.send(
         "{u}さんがmessageid={id}からリアクション{r}をはずしました".format(
@@ -46,6 +50,16 @@ async def on_reaction_remove(reaction, user):
 @bot.command(name="edit")
 async def edit_message(ctx):
     await ctx.message.edit(content="メッセージの内容を書き替えるテスト")
+
+
+@bot.command(name="presen")
+async def presentation(ctx):
+    embed = discord.Embed(
+        title="選択肢を表示するテスト",
+        description=":regional_indicator_a: :sparkles: Choice1 (19/20)\n:regional_indicator_b: :apple: Choice2 (1/20)",
+        color=discord.Colour.dark_magenta(),
+    )
+    await ctx.channel.send("", embed=embed)
 
 
 @bot.command(name="poll")
