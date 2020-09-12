@@ -1,0 +1,26 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+flake8 = "==3.7.7"
+flake8-blind-except = "==0.1.1"
+flake8-debugger = "==3.2.0"
+flake8-docstrings = "==1.5.0"
+flake8-isort = "==2.7.0"
+flake8-import-order = "==0.18.1"
+flake8-quotes = "==2.0.1"
+isort = "==4.3.21"
+pep8-naming = "==0.8.2"
+autopep8 = "==1.4.4"
+sphinx = "==2.0.1"
+docutils = "==0.14"
+pyparsing = "==2.4.0"
+black = "==19.3b0"
+
+[packages]
+"discord.py" = "*"
+
+[requires]
+python_version = "3.7"
