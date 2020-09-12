@@ -5,6 +5,8 @@ from discord.ext import commands
 
 bot = commands.Bot(command_prefix="/")
 
+["\N{REGIONAL INDICATOR SYMBOL LETTER A}", "\N{REGIONAL INDICATOR SYMBOL LETTER B}"]
+
 
 @bot.event
 async def on_ready():
@@ -57,9 +59,17 @@ async def presentation(ctx):
     embed = discord.Embed(
         title="選択肢を表示するテスト",
         description=":regional_indicator_a: :sparkles: Choice1 (19/20)\n:regional_indicator_b: :apple: Choice2 (1/20)",
-        color=discord.Colour.dark_magenta(),
+        color=discord.Colour.magenta(),
     )
-    await ctx.channel.send("", embed=embed)
+    message = await ctx.channel.send("", embed=embed)
+    indicators = message.embeds[0].description
+    # TODO indicators から A, B, C...を抜き出す
+    indicators = [
+        emoji.emojize(":regional_indicator_a:"),
+        emoji.emojize(":regional_indicator_b:"),
+    ]
+    for emj in indicators:
+        await message.add_reaction("\N{THUMBS UP SIGN}")
 
 
 @bot.command(name="poll")
