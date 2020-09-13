@@ -56,6 +56,7 @@ async def on_reaction_remove(reaction, user):
             u=user.display_name, id=message.id, r=reaction.emoji, c=target_count
         )
     )
+    # TODO message.edit(embed=message.embeds[0].description + "内容に変更を加えるテスト")
     await message.edit(content="メッセージの内容を書き替えるテスト")
 
 
