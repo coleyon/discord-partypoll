@@ -9,9 +9,6 @@ import string
 bot = commands.Bot(command_prefix="/")
 
 RE_LIMIT = r"^\[(\d+)\].+$"
-# RE_CURRENT_LIMIT = r"^.+\((\d+)/(\d+)\).+$"
-# RE_EMOJI = r"^(:.+:)"
-# RE_EMOJI_UNICODE = re.compile("[\U00010000-\U0010ffff]", flags=re.UNICODE)
 ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
 EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
 RE_EMBED_LINE = r"(^.+\()(\d+)(/)([\d|-]+)(\).+$)"

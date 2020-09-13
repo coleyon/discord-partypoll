@@ -1,4 +1,13 @@
 # Description
 
-sample code
-https://discord.com/api/oauth2/authorize?client_id=708283888652255252&permissions=75840&scope=bot
+Simple Polling bot for discord.
+
+## Quickstart
+
+    $ cd ${workspaceFolder}
+    $ pipenv lock -r > requirements.txt
+    $ docker-compose build
+    $ docker-compose up -d
+
+## Usage
+
