@@ -46,12 +46,17 @@ async def on_reaction_add(reaction, user):
 async def on_reaction_remove(reaction, user):
     if user.id == bot.user.id:
         return
+    message = reaction.message
     channel = reaction.message.channel
+    target_count = [r for r in message.reactions if r.emoji == reaction.emoji][
+        0
+    ].count - 1
     await channel.send(
-        "{u}さんがmessageid={id}からリアクション{r}をはずしました".format(
-            u=user.display_name, id=reaction.message.id, r=reaction.emoji
+        "{u}さんがmessageid={id}からリアクション{r}をはずし、リアクション者数は{c}になりました。".format(
+            u=user.display_name, id=message.id, r=reaction.emoji, c=target_count
         )
     )
+    await message.edit(content="メッセージの内容を書き替えるテスト")
 
 
 @bot.command(name="edit")
