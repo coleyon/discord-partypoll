@@ -21,7 +21,7 @@ black = "==19.3b0"
 
 [packages]
 "discord.py" = "*"
-emojis = "*"
+emoji = "*"
 
 [requires]
 python_version = "3.7"

@@ -1,11 +1,16 @@
 import os
 import discord
 from discord.ext import commands
-
+from discord.utils import get
 
 bot = commands.Bot(command_prefix="/")
 
-["\N{REGIONAL INDICATOR SYMBOL LETTER A}", "\N{REGIONAL INDICATOR SYMBOL LETTER B}"]
+ICONS = {
+    k: v
+    for k, v in zip(
+        range(1, 10), ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
+    )
+}
 
 
 @bot.event
@@ -54,27 +59,19 @@ async def edit_message(ctx):
     await ctx.message.edit(content="メッセージの内容を書き替えるテスト")
 
 
-@bot.command(name="presen")
+@bot.command(name="poll")
 async def presentation(ctx):
     embed = discord.Embed(
         title="選択肢を表示するテスト",
-        description=":regional_indicator_a: :sparkles: Choice1 (19/20)\n:regional_indicator_b: :apple: Choice2 (1/20)",
+        description=":one: :sparkles: Choice1 (19/20)\n:two: :apple: Choice2 (1/20)",
         color=discord.Colour.magenta(),
     )
     message = await ctx.channel.send("", embed=embed)
     indicators = message.embeds[0].description
     # TODO indicators から A, B, C...を抜き出す
-    indicators = [
-        emoji.emojize(":regional_indicator_a:"),
-        emoji.emojize(":regional_indicator_b:"),
-    ]
-    for emj in indicators:
-        await message.add_reaction("\N{THUMBS UP SIGN}")
-
-
-@bot.command(name="poll")
-async def make_poll(ctx):
-    await ctx.channel.send("リアクション先を打つテスト")
+    indicators = [ICONS[1], ICONS[2]]
+    for indicator in indicators:
+        await message.add_reaction(indicator)
 
 
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
