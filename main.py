@@ -2,15 +2,14 @@ import os
 import discord
 from discord.ext import commands
 from discord.utils import get
+import re
 
 bot = commands.Bot(command_prefix="/")
 
-ICONS = {
-    k: v
-    for k, v in zip(
-        range(1, 10), ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
-    )
-}
+RE_LIMIT = r"^\[(\d+)\].+$"
+RE_EMOJI = r"^(:.+:)"
+ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
+EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
 
 
 @bot.event
@@ -60,22 +59,31 @@ async def on_reaction_remove(reaction, user):
     await message.edit(content="メッセージの内容を書き替えるテスト")
 
 
-@bot.command(name="edit")
-async def edit_message(ctx):
-    await ctx.message.edit(content="メッセージの内容を書き替えるテスト")
+def _get_limit(msg):
+    if re.match(RE_LIMIT, msg):
+        return re.sub(RE_LIMIT, r"\1", msg)
+    else:
+        return "-"
 
 
 @bot.command(name="poll")
-async def presentation(ctx):
+async def make_poll(ctx, title, *args):
+    if len(args) > len(EMOJIS):
+        await ctx.channel.send("指定できる選択肢は{n}個までです。".format(n=len(EMOJIS)))
+        return
+    contents = {
+        num: "{e} (0/{lim}) {m}".format(e=EMOJIS[num], lim=_get_limit(msg), m=msg)
+        for num, msg in enumerate(args)
+    }
     embed = discord.Embed(
-        title="選択肢を表示するテスト",
-        description=":one: :sparkles: Choice1 (19/20)\n:two: :apple: Choice2 (1/20)",
+        title=title,
+        description="\n".join(contents.values()),
         color=discord.Colour.magenta(),
     )
     message = await ctx.channel.send("", embed=embed)
     indicators = message.embeds[0].description
     # TODO indicators から A, B, C...を抜き出す
-    indicators = [ICONS[1], ICONS[2]]
+    indicators = [EMOJIS[0], EMOJIS[1]]
     for indicator in indicators:
         await message.add_reaction(indicator)
 
