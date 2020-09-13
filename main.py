@@ -2,14 +2,19 @@ import os
 import discord
 from discord.ext import commands
 from discord.utils import get
+from discord import Embed
 import re
+import string
 
 bot = commands.Bot(command_prefix="/")
 
 RE_LIMIT = r"^\[(\d+)\].+$"
+RE_CURRENT_LIMIT = r"^.+\((\d+)/(\d+)\).+$"
 RE_EMOJI = r"^(:.+:)"
+# RE_EMOJI_UNICODE = re.compile("[\U00010000-\U0010ffff]", flags=re.UNICODE)
 ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
 EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
+RE_EMBED_LINE = r"(^.+\()(\d+)(/)([\d|-]+)(\).+$)"
 
 
 @bot.event
@@ -33,30 +38,50 @@ async def on_reaction_add(reaction, user):
     # author = reaction.message.author
     if user.id == bot.user.id:
         return
-    channel = reaction.message.channel
-    await channel.send(
-        "{u}さんがmessageid={id}にリアクション{r}をつけました".format(
-            u=user.display_name, id=reaction.message.id, r=reaction.emoji
-        )
-    )
+    old_embed = reaction.message.embeds[0]
+    desc = {n: s for n, s in enumerate(old_embed.description.split("\n"))}
+    key = [s[0] for s in desc.items() if reaction.emoji in s[1]][0]
+
+    # update current member count
+    tmp = list(re.match(RE_EMBED_LINE, desc[key]).groups())
+    tmp[1] = str(reaction.count - 1)
+    new_line = "".join(tmp)
+    desc[key] = new_line
+    # update current
+    new_embed = Embed(title=old_embed.title, description="\n".join(desc.values()))
+    await reaction.message.edit(embed=new_embed)
 
 
 @bot.event
 async def on_reaction_remove(reaction, user):
+    # if user.id == bot.user.id:
+    #     return
+    # message = reaction.message
+    # channel = reaction.message.channel
+    # target_count = [r for r in message.reactions if r.emoji == reaction.emoji][
+    #     0
+    # ].count - 1
+    # await channel.send(
+    #     "{u}さんがmessageid={id}からリアクション{r}をはずし、リアクション者数は{c}になりました。".format(
+    #         u=user.display_name, id=message.id, r=reaction.emoji, c=target_count
+    #     )
+    # )
+    # # TODO message.edit(embed=message.embeds[0].description + "内容に変更を加えるテスト")
+    # await message.edit(content="メッセージの内容を書き替えるテスト")
     if user.id == bot.user.id:
         return
-    message = reaction.message
-    channel = reaction.message.channel
-    target_count = [r for r in message.reactions if r.emoji == reaction.emoji][
-        0
-    ].count - 1
-    await channel.send(
-        "{u}さんがmessageid={id}からリアクション{r}をはずし、リアクション者数は{c}になりました。".format(
-            u=user.display_name, id=message.id, r=reaction.emoji, c=target_count
-        )
-    )
-    # TODO message.edit(embed=message.embeds[0].description + "内容に変更を加えるテスト")
-    await message.edit(content="メッセージの内容を書き替えるテスト")
+    old_embed = reaction.message.embeds[0]
+    desc = {n: s for n, s in enumerate(old_embed.description.split("\n"))}
+    key = [s[0] for s in desc.items() if reaction.emoji in s[1]][0]
+
+    # update current member count
+    tmp = list(re.match(RE_EMBED_LINE, desc[key]).groups())
+    tmp[1] = str(reaction.count - 1)
+    new_line = "".join(tmp)
+    desc[key] = new_line
+    # update current
+    new_embed = Embed(title=old_embed.title, description="\n".join(desc.values()))
+    await reaction.message.edit(embed=new_embed)
 
 
 def _get_limit(msg):
@@ -72,7 +97,9 @@ async def make_poll(ctx, title, *args):
         await ctx.channel.send("指定できる選択肢は{n}個までです。".format(n=len(EMOJIS)))
         return
     contents = {
-        num: "{e} (0/{lim}) {m}".format(e=EMOJIS[num], lim=_get_limit(msg), m=msg)
+        num: "{e} ({cur}/{lim}) {m}".format(
+            e=EMOJIS[num], cur=0, lim=_get_limit(msg), m=re.sub(r"^\[\d+\]", "", msg)
+        )
         for num, msg in enumerate(args)
     }
     embed = discord.Embed(
@@ -81,11 +108,8 @@ async def make_poll(ctx, title, *args):
         color=discord.Colour.magenta(),
     )
     message = await ctx.channel.send("", embed=embed)
-    indicators = message.embeds[0].description
-    # TODO indicators から A, B, C...を抜き出す
-    indicators = [EMOJIS[0], EMOJIS[1]]
-    for indicator in indicators:
-        await message.add_reaction(indicator)
+    for num, _ in enumerate(args):
+        await message.add_reaction(EMOJIS[num])
 
 
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
