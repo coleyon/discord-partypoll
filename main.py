@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord.utils import get
 from discord import Embed
 import re
+from defs import HELP_TEXT
 
 bot = commands.Bot(command_prefix="/")
 
@@ -13,28 +14,6 @@ EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
 RE_EMBED_LINE = r"(^.+\()(\d+)(/)([\d|-]+)(\).+\()(.*)(\)$)"
 COLOR = discord.Colour.magenta()
 SEP = ","
-HELP_TEXT = """[Extended Poll]
-■質問に回答する人向け
-https://kaze-lab.com/discord-simplepoll/
-こちらで解説されている `Simple Poll` Botと用法がほぼ同じですが、
-質問へ回答した時に人数上限に達した場合に、
-回答が自動的に取り消されつつ、その旨をBotが教えてくれる点が異なります。
-つまり、上限を超える回答をしないように回答者側が気を使わなくて良いです。
-
-■質問を作る人向け
-回答に人数制限をつけることができる Simple Poll のクローンです。
-質問は最大10コまで指定できます。
-
-コマンド構文:
-　　`/epoll "タイトル" "[1]回答者数の上限が1の質問" "上限が無い質問" ...`
-　　`/epoll-help`
-コマンド例:
-　　`/epoll イベントだよ！ "[10]:white_flower: お花見" "[3] :peach: 桃狩り" ":snowflake: 雪まつり"`
-　　`/epoll title [1]1 2 3 4 5 6 7 8 9 10`
-
-日本語やスペースを含む質問はダブルクォーテーション `"` で囲む必要があります。
-半角英数のみでスペースを含まない質問（例えば`[1]Question-A`）はクォーテーションで囲まなくても大丈夫です。
-"""
 
 
 @bot.event
