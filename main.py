@@ -10,9 +10,9 @@ bot = commands.Bot(command_prefix="/")
 RE_LIMIT = r"^\[(\d+)\].+$"
 ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
 EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
-RE_EMBED_LINE = r"(^.+\()(\d+)(/)([\d|-]+)(\).+$)"
+RE_EMBED_LINE = r"(^.+\()(\d+)(/)([\d|-]+)(\).+\()(.*)(\)$)"
 COLOR = discord.Colour.magenta()
-
+SEP = ","
 HELP_TEXT = """[Extended Poll]
 ■質問に回答する人向け
 https://kaze-lab.com/discord-simplepoll/
@@ -46,13 +46,6 @@ async def on_ready():
     print("------------------------")
 
 
-@bot.command(name="echo")
-async def echo(ctx):
-    if ctx.author.bot:
-        return
-    await ctx.channel.send(ctx.message.content)
-
-
 async def _renew_reaction(reaction, user, is_remove=False):
     if user.id == bot.user.id:
         return
@@ -67,7 +60,7 @@ async def _renew_reaction(reaction, user, is_remove=False):
         # over the limit when reaction added
         await reaction.message.remove_reaction(reaction.emoji, user)
         await reaction.message.channel.send(
-            "{mention} さんへ\n{e} はもう満員だったので、今のリアクションを取り消しました。ごめんなさい:sob:\n{poll_url}".format(
+            "{mention} さんへ\n{e}は満員だったのでリアクションを取り消しました。ごめんなさい:sob:\n{poll_url}".format(
                 mention=user.mention,
                 e=reaction.emoji,
                 poll_url=reaction.message.jump_url,
@@ -75,10 +68,19 @@ async def _renew_reaction(reaction, user, is_remove=False):
         )
         return
 
+    reactioner = user.display_name.replace(SEP, "")  # remove comma from the name
+    # update numbers of current members
     tmp[1] = str(reaction.count - 1)
+    # update names of current members
+    members = set(tmp[5].split(",")) if tmp[5] else set()
+    if is_remove:
+        members.discard(reactioner)
+    else:
+        members.add(reactioner)
+    tmp[5] = ",".join(members)
+    # update the line
     new_line = "".join(tmp)
     desc[key] = new_line
-    # update current
     new_embed = Embed(
         title=old_embed.title, description="\n".join(desc.values()), color=COLOR
     )
@@ -108,7 +110,7 @@ async def make_poll(ctx, title, *args):
         await ctx.channel.send("指定できる選択肢は{n}個までです。".format(n=len(EMOJIS)))
         return
     contents = {
-        num: "{e} ({cur}/{lim}) {m}".format(
+        num: "{e} ({cur}/{lim}) {m} ()".format(
             e=EMOJIS[num], cur=0, lim=_get_limit(msg), m=re.sub(r"^\[\d+\]", "", msg)
         )
         for num, msg in enumerate(args)
