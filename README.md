@@ -1,6 +1,6 @@
 # Description
 
-Discord bot like the [Simple Poll](https://discord.bots.gg/bots/324631108731928587).
+The simple poll bot like to the [Simple Poll](https://discord.bots.gg/bots/324631108731928587), with a few features added.
 
 ## Summary
 
