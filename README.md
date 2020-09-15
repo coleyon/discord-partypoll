@@ -1,13 +1,16 @@
 # Description
 
-Simple Polling bot for discord.
+Discord bot like the [Simple Poll]().
+
+## Summary
+
+Simple Poll bot for discord.
 
 ## Quickstart
 
-    $ cd ${workspaceFolder}
-    $ pipenv lock -r > requirements.txt
-    $ docker-compose build
-    $ docker-compose up -d
+* Set token to `DISCORD_BOT_TOKEN` in `docker-compose.yml`.
+* `$ docker-compose up -d`
 
 ## Usage
 
+`/epoll`
