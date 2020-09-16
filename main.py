@@ -26,8 +26,6 @@ async def on_ready():
 
 
 async def _renew_reaction(reaction, user, is_remove=False):
-    if user.id == bot.user.id:
-        return
     old_embed = reaction.message.embeds[0]
     desc = {n: s for n, s in enumerate(old_embed.description.split("\n"))}
     key = [s[0] for s in desc.items() if reaction.emoji in s[1]][0]
@@ -67,12 +65,46 @@ async def _renew_reaction(reaction, user, is_remove=False):
 
 
 @bot.event
-async def on_reaction_add(reaction, user):
+async def on_raw_reaction_add(payload):
+    if payload.user_id == bot.user.id:
+        return
+    message = await bot.get_channel(payload.channel_id).fetch_message(
+        payload.message_id
+    )
+    if message.author.id != bot.user.id:
+        return
+    reaction = [
+        reaction
+        for reaction in message.reactions
+        if reaction.emoji == payload.emoji.name
+    ][0]
+    user = [
+        user
+        for user in bot.get_channel(payload.channel_id).members
+        if user.id == payload.user_id
+    ][0]
     await _renew_reaction(reaction, user)
 
 
 @bot.event
-async def on_reaction_remove(reaction, user):
+async def on_raw_reaction_remove(payload):
+    if payload.user_id == bot.user.id:
+        return
+    message = await bot.get_channel(payload.channel_id).fetch_message(
+        payload.message_id
+    )
+    if message.author.id != bot.user.id:
+        return
+    reaction = [
+        reaction
+        for reaction in message.reactions
+        if reaction.emoji == payload.emoji.name
+    ][0]
+    user = [
+        user
+        for user in bot.get_channel(payload.channel_id).members
+        if user.id == payload.user_id
+    ][0]
     await _renew_reaction(reaction, user, is_remove=True)
 
 
