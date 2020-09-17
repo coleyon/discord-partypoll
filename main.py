@@ -13,8 +13,8 @@ ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9
 EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
 RE_EMBED_LINE = r"(^.+\()(\d+)(/)([\d|-]+)(\).+\()(.*)(\)$)"
 SEP = ","
-EACH_POLL = "Each Poll"
-TOTAL_POLL = "Total Poll"
+EACH_POLL = "設問毎制限"
+TOTAL_POLL = "全体制限"
 COLORS = {EACH_POLL: discord.Colour.magenta(), TOTAL_POLL: discord.Colour.greyple()}
 
 
