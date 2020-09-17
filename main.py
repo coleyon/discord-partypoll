@@ -5,11 +5,9 @@ from discord.utils import get
 from discord import Embed
 import re
 from defs import HELP_TEXT
-from itertools import islice
 
 bot = commands.Bot(command_prefix="/")
 
-LIMIT_AND_CONCAT = r"\[(\d+|\d+\+\d+)\]"
 RE_LIMIT = r"^\[(\d+)\].+$"
 ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
 EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
@@ -66,8 +64,7 @@ async def _renew_reaction(reaction, user, is_remove=False):
     await reaction.message.edit(embed=new_embed)
 
 
-@bot.event
-async def on_raw_reaction_add(payload):
+async def _get_reaction_ctx(payload):
     if payload.user_id == bot.user.id:
         return
     message = await bot.get_channel(payload.channel_id).fetch_message(
@@ -85,29 +82,24 @@ async def on_raw_reaction_add(payload):
         for user in bot.get_channel(payload.channel_id).members
         if user.id == payload.user_id
     ][0]
-    await _renew_reaction(reaction, user)
+    if reaction and user:
+        return [reaction, user]
+    else:
+        return
+
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    contexts = await _get_reaction_ctx(payload)
+    if contexts:
+        await _renew_reaction(*contexts)
 
 
 @bot.event
 async def on_raw_reaction_remove(payload):
-    if payload.user_id == bot.user.id:
-        return
-    message = await bot.get_channel(payload.channel_id).fetch_message(
-        payload.message_id
-    )
-    if message.author.id != bot.user.id:
-        return
-    reaction = [
-        reaction
-        for reaction in message.reactions
-        if reaction.emoji == payload.emoji.name
-    ][0]
-    user = [
-        user
-        for user in bot.get_channel(payload.channel_id).members
-        if user.id == payload.user_id
-    ][0]
-    await _renew_reaction(reaction, user, is_remove=True)
+    contexts = await _get_reaction_ctx(payload)
+    if contexts:
+        await _renew_reaction(*contexts, is_remove=True)
 
 
 def _get_limit(msg):
@@ -118,16 +110,28 @@ def _get_limit(msg):
 
 
 @bot.command(name="epoll")
-async def make_poll(ctx, title, *args):
-    # {index:limit,}
-    limits = {
-        x[0]: re.sub(r"^\[(\d+)\].*$", r"\1", x[1])
-        for x in enumerate(args)
-        if re.match(r"^\[\d+\].*$", x[1])
+async def make_epoll(ctx, title, *args):
+    """Extended Poll"""
+    if len(args) > len(EMOJIS):
+        await ctx.channel.send("指定できる選択肢は{n}個までです。".format(n=len(EMOJIS)))
+        return
+    contents = {
+        num: "{e} ({cur}/{lim}) {m} ()".format(
+            e=EMOJIS[num], cur=0, lim=_get_limit(msg), m=re.sub(r"^\[\d+\]", "", msg)
+        )
+        for num, msg in enumerate(args)
     }
-    choices = []
+    embed = discord.Embed(
+        title=title, description="\n".join(contents.values()), color=COLOR
+    )
+    message = await ctx.channel.send("", embed=embed)
+    for num, _ in enumerate(args):
+        await message.add_reaction(EMOJIS[num])
 
-    return
+
+@bot.command(name="jpoll")
+async def make_jpoll(ctx, title, limit, *args):
+    """Joined Poll"""
     if len(args) > len(EMOJIS):
         await ctx.channel.send("指定できる選択肢は{n}個までです。".format(n=len(EMOJIS)))
         return
