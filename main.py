@@ -5,9 +5,11 @@ from discord.utils import get
 from discord import Embed
 import re
 from defs import HELP_TEXT
+from itertools import islice
 
 bot = commands.Bot(command_prefix="/")
 
+LIMIT_AND_CONCAT = r"\[(\d+|\d+\+\d+)\]"
 RE_LIMIT = r"^\[(\d+)\].+$"
 ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
 EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
@@ -117,6 +119,15 @@ def _get_limit(msg):
 
 @bot.command(name="epoll")
 async def make_poll(ctx, title, *args):
+    # {index:limit,}
+    limits = {
+        x[0]: re.sub(r"^\[(\d+)\].*$", r"\1", x[1])
+        for x in enumerate(args)
+        if re.match(r"^\[\d+\].*$", x[1])
+    }
+    choices = []
+
+    return
     if len(args) > len(EMOJIS):
         await ctx.channel.send("指定できる選択肢は{n}個までです。".format(n=len(EMOJIS)))
         return
