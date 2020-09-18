@@ -153,7 +153,7 @@ async def make_each_poll(ctx, title, *args):
         }.values()
     )
     embed = discord.Embed(
-        title="\n".join([EACH_POLL, title]),
+        title="\n".join([title, EACH_POLL]),
         description="\n".join([*headers, *contents]),
         color=COLORS[EACH_POLL],
     )
@@ -176,7 +176,7 @@ async def make_total_poll(ctx, title, limit, *args):
         }.values()
     )
     embed = discord.Embed(
-        title="\n".join([TOTAL_POLL, title]),
+        title="\n".join([title, TOTAL_POLL]),
         description="\n".join([*headers, *contents]),
         color=COLORS[TOTAL_POLL],
     )
