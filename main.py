@@ -30,6 +30,9 @@ async def on_ready():
 async def _renew_reaction(reaction, user, is_remove=False):
     old_embed = reaction.message.embeds[0]
     desc = {n: s for n, s in enumerate(old_embed.description.split("\n"))}
+    if reaction.emoji not in ORG_EMOJIS:
+        # not poll reaction
+        return
     key = [s[0] for s in desc.items() if reaction.emoji in s[1]][0]
 
     # update current member count
@@ -90,6 +93,9 @@ async def _get_reaction_ctx(payload):
         payload.message_id
     )
     if message.author.id != bot.user.id:
+        return
+    if payload.emoji.name not in ORG_EMOJIS:
+        # not poll reaction
         return
     reaction = [
         reaction
