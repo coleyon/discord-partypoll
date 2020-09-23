@@ -77,7 +77,7 @@ async def _renew_reaction(reaction, user, is_remove=False):
     # update the line
     new_line = "".join(tmp)
     desc[key] = new_line
-    desc[0] = re.sub(r"\d", str(total_reaction_count), desc[0], 1)
+    desc[0] = re.sub(r"\d+", str(total_reaction_count), desc[0], 1)
     new_embed = Embed(
         title=old_embed.title,
         description="\n".join(desc.values()),
