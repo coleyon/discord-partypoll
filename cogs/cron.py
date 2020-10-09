@@ -13,7 +13,7 @@ class Cron(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.mainloop.start()
+        self.tick.start()
         self.hashids = Hashids(
             min_length=4, salt=os.getenv("HASHIDS_SALT", default="123")
         )
@@ -61,16 +61,17 @@ class Cron(commands.Cog):
         print("{name} Extension Enabled.".format(name=self.__cog_name__))
 
     @tasks.loop(minutes=1.0, reconnect=True)
-    async def mainloop(self):
-        self.default_channel.send("run!")
+    async def tick(self):
+        x = str(dt.now())
+        print(x)
+        self.default_channel.send(x)
 
-    @mainloop.before_loop
+    @tick.before_loop
     async def check_next_schedule():
         self.default_channel.send("standby 2secs...")
-        sleep(2.0)
 
     def cog_unload(self):
-        self.mainloop.cancel()
+        self.tick.cancel()
 
 
 def setup(bot):
