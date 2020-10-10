@@ -24,6 +24,9 @@ black = "==19.3b0"
 emoji = "*"
 croniter = "*"
 hashids = "*"
+aiofiles = "*"
+pytz = "*"
+tabulate = {extras = ["widechars"],version = "*"}
 
 [requires]
 python_version = "3.7"
