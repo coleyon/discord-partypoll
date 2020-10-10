@@ -28,7 +28,10 @@ class Cron(commands.Cog):
         self.timezone = os.getenv("TIMEZONE", default="Asia/Tokyo")
 
     def _now(self):
-        return dt.now(pytz.utc).astimezone(pytz.timezone(self.timezone))
+        return pytz.timezone(self.timezone).localize(dt.now())
+
+    def _strftime(self, date):
+        return date.strftime("%Y/%m/%d %H:%M")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -90,30 +93,30 @@ class Cron(commands.Cog):
             crontab = v[0].split(" ")
             table.append([k, *crontab, v[1]])
         formatted_description = tabulate(table, headers, tablefmt="simple")
-        embed = Embed(
-            title=f"{len(self.userdata)} 件のスケジュールが登録されています", color=Colour.gold()
+        await ctx.channel.send(
+            f"{len(self.userdata)} 件のスケジュールが登録されています\n```{formatted_description}```"
         )
-        await ctx.channel.send(f"```{formatted_description}```", embed=embed)
 
     @cron.command(name="del")
     async def delete_schedule(self, ctx, name):
-        await ctx.send(f"スケジュール `{self.userdata.pop(name)}` を除去しました。")
+        self.userdata.pop(name)
         await self._save_userdata()
+        await ctx.send(f"スケジュール `{name}` を除去しました。")
 
     @cron.command(name="add")
     async def add_schedule(self, ctx, name, m, h, dom, mon, dow, *cmd):
         crontab = " ".join([m, h, dom, mon, dow])
         if not croniter.is_valid(crontab):
-            await ctx.send(f"スケジュール `{crontab}` の指定がおかしいです。")
+            await ctx.send(f"スケジュール `{crontab}` が不正です。")
             return
         cmd = " ".join(cmd)
-        x = {name: [crontab, cmd]}
-        self.userdata = {**self.userdata, **x}
+        new_record = {name: [crontab, cmd]}
+        self.userdata = {**self.userdata, **new_record}
         await self._save_userdata()
-        itr = croniter(crontab, self._now())
+        next_run = self._strftime(croniter(crontab, self._now()).get_next(dt))
         await ctx.send(
             f"スケジュール `{name}` を追加しました。\n"
-            f"次回実行予定は {itr.get_next()} です。\n"
+            f"次回実行予定は {next_run} です。\n"
             f"実行されるコマンドは `{cmd}` です。"
         )
 

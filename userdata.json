@@ -1,8 +1,4 @@
 {
-    "schedule2": [
-        "45 8 * * 3",
-        "/epoll title [1]a b c"
-    ],
     "schnedule1": [
         "*/10 * * * *",
         "/tpoll \u96c6\u5408\uff5e 5 a b c"
