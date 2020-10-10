@@ -46,9 +46,19 @@ class Cron(commands.Cog):
 
     @tasks.loop(minutes=1.0, reconnect=True)
     async def tick(self):
-        x = str(dt.now())
-        print(x)
-        self.default_channel.send(x)
+        # TODO implement tick
+        current = self._now()
+        await self._load_userdata()
+        commands = []
+        for k, v in self.userdata.items():
+            schedule = croniter(v[0], current).get_next(dt)
+            if self._strftime(current) == self._strftime(schedule):
+                commands.append(v[1])
+        if len(commands):
+            for command in commands:
+                print(command)
+                await self.default_channel.send(command)
+                # await ctx.invoke(self.bot.get_command("cron").all_commands["load"])
 
     @tick.before_loop
     async def before_printer(self):
@@ -138,8 +148,7 @@ class Cron(commands.Cog):
     @cron.command(name="get")
     async def get_userdata(self, ctx):
         await self._save_userdata()
-        with open(USERDATA_PATH, mode="r", encoding="utf-8") as fp:
-            await ctx.send("現在のスケジュールデータです。", file=File(fp, "userdata.json"))
+        await ctx.send("現在のスケジュールデータです。", file=File(USERDATA_PATH))
 
     async def _save_userdata(self):
         async with aiofiles.open(USERDATA_PATH, mode="w", encoding="utf-8") as afp:

@@ -1,4 +1,8 @@
 {
+    "every_minute": [
+        "*/1 * * * *",
+        "/tpoll title 4 a b c d"
+    ],
     "schedule2": [
         "3 * * 12 sat",
         "/tpoll \"title is \ud83c\udf49 da!\" 5 x y z"
