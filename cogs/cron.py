@@ -109,15 +109,15 @@ class Cron(commands.Cog):
         if not croniter.is_valid(crontab):
             await ctx.send(f"スケジュール `{crontab}` が不正です。")
             return
-        cmd = " ".join(cmd)
-        new_record = {name: [crontab, cmd]}
+        escaped_cmds = " ".join((f'"{i}"' if " " in i else i for i in cmd))
+        new_record = {name: [crontab, escaped_cmds]}
         self.userdata = {**self.userdata, **new_record}
         await self._save_userdata()
         next_run = self._strftime(croniter(crontab, self._now()).get_next(dt))
         await ctx.send(
             f"スケジュール `{name}` を追加しました。\n"
             f"次回実行予定は {next_run} です。\n"
-            f"実行されるコマンドは `{cmd}` です。"
+            f"実行されるコマンドは `{escaped_cmds}` です。"
         )
 
     @cron.command(name="upload")

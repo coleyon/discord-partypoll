@@ -1,4 +1,12 @@
 {
+    "schedule2": [
+        "3 * * 12 sat",
+        "/tpoll \"title is \ud83c\udf49 da!\" 5 x y z"
+    ],
+    "schedule4": [
+        "3 * * 12 sat",
+        "/tpoll \"title is \ud83c\udf49 da!\" 5 [7]x y z\ud83e\udd29"
+    ],
     "schnedule1": [
         "*/10 * * * *",
         "/tpoll \u96c6\u5408\uff5e 5 a b c"
