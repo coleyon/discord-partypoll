@@ -1,17 +1,18 @@
-from discord.ext import commands, tasks
+import json
+import os
+from collections import namedtuple
 from datetime import datetime as dt
 from datetime import timedelta as td
-from hashids import Hashids
-from discord import Embed, Activity, ActivityType, Status, Colour, File
-from collections import namedtuple
-import aiofiles
-import aiohttp
-from croniter import croniter
-import json
-from tabulate import tabulate
-import os
-import pytz
 from time import sleep
+
+import aiofiles
+import pytz
+import re
+from croniter import croniter
+from discord import Activity, ActivityType, Colour, Embed, File, Status
+from discord.ext import commands, tasks
+from hashids import Hashids
+from tabulate import tabulate
 
 USERDATA_PATH = os.getenv("USERDATA_PATH", default="userdata.json")
 Schedule = namedtuple(
@@ -46,22 +47,26 @@ class Cron(commands.Cog):
 
     @tasks.loop(minutes=1.0, reconnect=True)
     async def tick(self):
-        # TODO implement tick
         current = self._now()
-        await self._load_userdata()
-        commands = []
+        # await self._load_userdata()
         for k, v in self.userdata.items():
-            schedule = croniter(v[0], current).get_next(dt)
-            if self._strftime(current) == self._strftime(schedule):
-                commands.append(v[1])
-        if len(commands):
-            for command in commands:
-                print(command)
-                await self.default_channel.send(command)
-                # await ctx.invoke(self.bot.get_command("cron").all_commands["load"])
+            if croniter.match(v[0], current):
+                print(f"{self._strftime(current)} match! {k}")
+                await self.default_channel.send(f"{v[1]}")
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author == self.bot.user:
+            if message.content.startswith("/"):
+                ctx = await self.bot.get_context(message)
+                m = message.content.split(" ")
+                cmd = m[0][1:]
+                query = " ".join(m[1:])
+                await ctx.invoke(self.bot.get_command(cmd), query=query)
+                # await self.bot.process_commands(message)
 
     @tick.before_loop
-    async def before_printer(self):
+    async def before_tick(self):
         await self.bot.wait_until_ready()
 
     @cron.command(name="disable")
@@ -82,22 +87,23 @@ class Cron(commands.Cog):
                     f"指定したタイムゾーン {tz} はありません。\n"
                     f"指定できるタイムゾーンは https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568 です。"
                 )
+        else:
+            await ctx.send(f"今のタイムゾーンは {self.timezone} です。")
 
     @cron.command(name="enable")
     async def enable_cron(self, ctx):
         self.default_channel = ctx.channel
-        await ctx.invoke(self.bot.get_command("cron").all_commands["load"])
-        self.tick.start()
+        await self._load_userdata()
         await self.bot.change_presence(
             activity=Activity(
                 type=ActivityType.unknown, name=f"Cron: {len(self.userdata)}"
             )
         )
+        self.tick.start()
 
     @cron.command(name="show")
     async def show_schedule(self, ctx):
         headers = ["名前", "分", "時", "日", "月", "曜日", "コマンド"]
-        await self._load_userdata()
         table = []
         for k, v in self.userdata.items():
             crontab = v[0].split(" ")
@@ -118,11 +124,11 @@ class Cron(commands.Cog):
         crontab = " ".join([m, h, dom, mon, dow])
         if not croniter.is_valid(crontab):
             await ctx.send(f"スケジュール `{crontab}` が不正です。")
-            return
-        escaped_cmds = " ".join((f'"{i}"' if " " in i else i for i in cmd))
-        new_record = {name: [crontab, escaped_cmds]}
-        self.userdata = {**self.userdata, **new_record}
-        await self._save_userdata()
+        else:
+            escaped_cmds = " ".join((f'"{i}"' if " " in i else i for i in cmd))
+            new_record = {name: [crontab, escaped_cmds]}
+            self.userdata = {**self.userdata, **new_record}
+            await self._save_userdata()
         next_run = self._strftime(croniter(crontab, self._now()).get_next(dt))
         await ctx.send(
             f"スケジュール `{name}` を追加しました。\n"
@@ -133,21 +139,14 @@ class Cron(commands.Cog):
     @cron.command(name="upload")
     async def upload_userdata(self, ctx):
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(ctx.message.attachments[0].url) as resp:
-                    if resp.status == 200 and resp.reason == "OK":
-                        self.userdata = json.loads(await resp.text(), encoding="utf-8")
-                    else:
-                        raise
-            await self._save_userdata()
-            await ctx.send(":yum: スケジュールが正しくアップロードできました。")
+            await ctx.message.attachments[0].save(fp=USERDATA_PATH)
+            await self._load_userdata()
+            await ctx.send(":yum: スケジュールをアップロードしました。")
         except BaseException:
-            await ctx.send(":hot_face: スケジュールが正しくアップロードできませんでした。")
-        await ctx.invoke(self.bot.get_command("cron").all_commands["show"])
+            await ctx.send(":hot_face: スケジュールをアップロードできませんでした。")
 
     @cron.command(name="get")
     async def get_userdata(self, ctx):
-        await self._save_userdata()
         await ctx.send("現在のスケジュールデータです。", file=File(USERDATA_PATH))
 
     async def _save_userdata(self):
