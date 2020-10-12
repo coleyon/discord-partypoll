@@ -1,5 +1,7 @@
+import asyncio
 import json
 import os
+import re
 from collections import namedtuple
 from datetime import datetime as dt
 from datetime import timedelta as td
@@ -7,7 +9,6 @@ from time import sleep
 
 import aiofiles
 import pytz
-import re
 from croniter import croniter
 from discord import Activity, ActivityType, Colour, Embed, File, Status
 from discord.ext import commands, tasks
@@ -19,6 +20,11 @@ Schedule = namedtuple(
     "Schedule", ("guild_id", "channel_id", "register_id", "cron", "command")
 )
 tabulate.WIDE_CHARS_MODE = True
+HELP_TEXT = """[Cron like Scheduler]
+
+SYNOPSIS:
+  `/cron 
+"""
 
 
 class Cron(commands.Cog):
@@ -51,7 +57,7 @@ class Cron(commands.Cog):
         # await self._load_userdata()
         for k, v in self.userdata.items():
             if croniter.match(v[0], current):
-                print(f"{self._strftime(current)} match! {k}")
+                await self.default_channel.send(":clock9: It's a scheduled task!")
                 await self.default_channel.send(f"{v[1]}")
 
     @commands.Cog.listener()
@@ -61,9 +67,8 @@ class Cron(commands.Cog):
                 ctx = await self.bot.get_context(message)
                 m = message.content.split(" ")
                 cmd = m[0][1:]
-                query = " ".join(m[1:])
-                await ctx.invoke(self.bot.get_command(cmd), query=query)
-                # await self.bot.process_commands(message)
+                query = m[1:]
+                await ctx.invoke(self.bot.get_command(cmd), *query)
 
     @tick.before_loop
     async def before_tick(self):
@@ -73,8 +78,9 @@ class Cron(commands.Cog):
     async def disable_cron(self, ctx):
         self.tick.cancel()
         await self.bot.change_presence(
-            activity=Activity(type=ActivityType.unknown, name="Pause Cron")
+            activity=Activity(type=ActivityType.unknown, name=":sleeping:")
         )
+        await self.default_channel.send(":first_quarter_moon_with_face: 自動実行を無効にしました。")
 
     @cron.command(name="timezone")
     async def set_timezone(self, ctx, tz=None):
@@ -95,11 +101,10 @@ class Cron(commands.Cog):
         self.default_channel = ctx.channel
         await self._load_userdata()
         await self.bot.change_presence(
-            activity=Activity(
-                type=ActivityType.unknown, name=f"Cron: {len(self.userdata)}"
-            )
+            activity=Activity(type=ActivityType.unknown, name="Enable Cron")
         )
         self.tick.start()
+        await self.default_channel.send(":sun_with_face: 自動実行を有効にしました。")
 
     @cron.command(name="show")
     async def show_schedule(self, ctx):
