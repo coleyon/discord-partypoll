@@ -22,8 +22,12 @@ Schedule = namedtuple(
 tabulate.WIDE_CHARS_MODE = True
 HELP_TEXT = """[Cron like Scheduler]
 
-SYNOPSIS:
-  `/cron 
+Synopsis:
+    `/cron add`
+
+Refs:
+    https://docs.python.org/ja/3/library/datetime.html#strftime-and-strptime-format-codes
+    https://docs.python.org/ja/3/library/datetime.html#strftime-and-strptime-format-codes
 """
 
 
