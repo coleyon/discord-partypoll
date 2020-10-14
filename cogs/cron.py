@@ -2,11 +2,12 @@ import asyncio
 import json
 import os
 import re
+import shlex
 from collections import namedtuple
 from datetime import datetime as dt
 from datetime import timedelta as td
 from time import sleep
-
+from dateutil.relativedelta import relativedelta
 import aiofiles
 import pytz
 from croniter import croniter
@@ -20,15 +21,57 @@ Schedule = namedtuple(
     "Schedule", ("guild_id", "channel_id", "register_id", "cron", "command")
 )
 tabulate.WIDE_CHARS_MODE = True
-HELP_TEXT = """[Cron like Scheduler]
+HELP_TEXT = """```[Cron like Scheduler]
 
 Synopsis:
-    `/cron add`
+    /cron add <SCHEDULE_NAME> <SCHEDULE> <COMMAND> - add a schedule.
+    /cron del <SCHEDULE_NAME> - remove specified schedule
+    /cron show - show list of registered schedules.
+    /cron get - download a schedule file formatted with json.
+    /cron load - upload a schedule file formatted with json.
 
-Refs:
-    https://docs.python.org/ja/3/library/datetime.html#strftime-and-strptime-format-codes
-    https://docs.python.org/ja/3/library/datetime.html#strftime-and-strptime-format-codes
-"""
+SCHEDULE_NAME:
+    Name of the schedule.
+
+SCHEDULE:
+    * * * * *
+    | | | | |
+    | | | | |
+    | | | | +---- Day of the Week   (range: 0-6 or mon,tue,wed,thu,fri,sat,sun)
+    | | | +------ Month of the Year (range: 1-12)
+    | | +-------- Day of the Month  (range: 1-31)
+    | +---------- Hour              (range: 0-23)
+    +------------ Minute            (range: 0-59)  # every n day in month.
+    Expression Field Description
+    ----------------------------------
+    *        any    Fire on every value
+    */a      any    Fire every a values, starting from the minimum
+    a-b      any    Fire on any value within the a-b range (a must be smaller than b)
+    a-b/c    any    Fire every c values within the a-b range
+    x,y,z    any    Fire on any matching expression; can combine any number of any of the above expressions
+
+    Examples:
+        */1 * * * *      : runs at every minutes.
+        59 * * * sun     : runs at 59 minutes every hour
+        0 14,21 * * *    : runs at 14:00 and 21:00 every day.
+        40-50 3 25 12 *  : runs from 3:40 to 3:50 on December 25th.
+
+COMMAND:
+    The Commands executed on the specified schedule.
+    i.e.: /tpoll title 5 "first question" "second question"
+
+InplaceDate:
+    For example, you want to notify members 
+    about a date three days after the command execution date.
+    Let's assume that the command execution date is December 21st
+    and the event date is December 24th.
+
+    /tpoll "Event on 12/24(Mon)" 5 "I'm Join!" "Damn.."
+
+    In such a case, specify the COMMAND part as follows.
+
+    /tpoll "Event on {{days.3}}" 5 "I'm Join!" "Damn.."
+```"""
 
 
 class Cron(commands.Cog):
@@ -53,7 +96,7 @@ class Cron(commands.Cog):
     @commands.group()
     async def cron(self, ctx):
         if ctx.invoked_subcommand is None:
-            await ctx.send("TODO: ヘルプテキストを表示")
+            await ctx.send(HELP_TEXT)
 
     @tasks.loop(minutes=1.0, reconnect=True)
     async def tick(self):
@@ -61,15 +104,21 @@ class Cron(commands.Cog):
         # await self._load_userdata()
         for k, v in self.userdata.items():
             if croniter.match(v[0], current):
-                await self.default_channel.send(":clock9: It's a scheduled task!")
                 await self.default_channel.send(f"{v[1]}")
+
+    # def IC(self, n):
+    #     d = self._now() + relativedelta()
+    #     return d.strftime("%m/%d")
 
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author == self.bot.user:
             if message.content.startswith("/"):
                 ctx = await self.bot.get_context(message)
-                m = message.content.split(" ")
+                # replaced_message = re.sub(
+                #     r"\{\{days\.\d+\}\}", lambda x: self.IC(x.group()), message.content
+                # )
+                m = shlex.split(replaced_message)
                 cmd = m[0][1:]
                 query = m[1:]
                 await ctx.invoke(self.bot.get_command(cmd), *query)

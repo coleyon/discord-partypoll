@@ -1,6 +1,6 @@
 {
-    "me_cmd": [
+    "test1": [
         "*/1 * * * *",
-        "/me xxx"
+        "/tpoll \"Event on {{3.days}}\" 5 \"I'm Join!\" Damn.."
     ]
 }
