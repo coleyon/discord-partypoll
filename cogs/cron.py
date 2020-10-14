@@ -118,7 +118,7 @@ class Cron(commands.Cog):
                 # replaced_message = re.sub(
                 #     r"\{\{days\.\d+\}\}", lambda x: self.IC(x.group()), message.content
                 # )
-                m = shlex.split(replaced_message)
+                m = shlex.split(message.content)
                 cmd = m[0][1:]
                 query = m[1:]
                 await ctx.invoke(self.bot.get_command(cmd), *query)
