@@ -122,11 +122,9 @@ class Poll(commands.Cog):
             for reaction in message.reactions
             if reaction.emoji == payload.emoji.name
         ][0]
-        user = [
-            user
-            for user in self.bot.get_channel(payload.channel_id).members
-            if user.id == payload.user_id
-        ][0]
+        user = await self.bot.get_channel(payload.channel_id).guild.fetch_member(
+            payload.user_id
+        )
         if reaction and user:
             return [reaction, user]
         else:

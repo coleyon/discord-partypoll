@@ -98,7 +98,7 @@ class Cron(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send(HELP_TEXT)
 
-    @tasks.loop(minutes=1.0, reconnect=True)
+    @tasks.loop(minutes=1.0, reconnect=True, count=1)
     async def tick(self):
         current = self._now()
         # await self._load_userdata()
