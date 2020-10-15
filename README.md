@@ -18,6 +18,7 @@ Simple Poll bot for discord.
 
 ## Quickstart
 
+* make requirements.txt `$ pipenv lock -r`
 * [Create your own discord bot and get the token](https://qiita.com/PinappleHunter/items/af4ccdbb04727437477f#bot%E7%94%A8%E3%81%AE%E3%83%88%E3%83%BC%E3%82%AF%E3%83%B3%E3%82%92%E6%89%8B%E3%81%AB%E5%85%A5%E3%82%8C%E3%82%8B)
 * Set the token to `DISCORD_BOT_TOKEN` in `docker-compose.yml`
 * Run `$ docker-compose up -d` on your docker server
