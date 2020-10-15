@@ -91,6 +91,9 @@ class Cron(commands.Cog):
     async def on_ready(self):
         self.default_channel = None
         await self._load_userdata()
+        await self.bot.change_presence(
+            activity=Activity(type=ActivityType.unknown, name=""), status=None
+        )
         print("{name} Extension Enabled.".format(name=self.__cog_name__))
 
     @commands.group()
@@ -98,13 +101,16 @@ class Cron(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send(HELP_TEXT)
 
-    @tasks.loop(minutes=1.0, reconnect=True, count=1)
+    @tasks.loop(minutes=1.0, reconnect=True)
     async def tick(self):
         current = self._now()
         # await self._load_userdata()
         for k, v in self.userdata.items():
             if croniter.match(v[0], current):
                 await self.default_channel.send(f"{v[1]}")
+        await self.bot.change_presence(
+            activity=Activity(type=ActivityType.listening, name="Cron"), status=None
+        )
 
     def IC(self, n):
         offset = re.sub(r"\{\{(\d+)\.days\}\}", r"\1", n)
@@ -134,9 +140,9 @@ class Cron(commands.Cog):
     async def disable_cron(self, ctx):
         self.tick.cancel()
         await self.bot.change_presence(
-            activity=Activity(type=ActivityType.unknown, name=":sleeping:")
+            activity=Activity(type=ActivityType.unknown, name=""), status=None
         )
-        await self.default_channel.send(":first_quarter_moon_with_face: 自動実行を無効にしました。")
+        await self.default_channel.send(":yum: 自動実行を無効にしました。")
 
     @cron.command(name="timezone")
     async def set_timezone(self, ctx, tz=None):
@@ -146,21 +152,21 @@ class Cron(commands.Cog):
                 await ctx.send(f"タイムゾーン {self.timezone} にセットしました。")
             else:
                 await ctx.send(
-                    f"指定したタイムゾーン {tz} はありません。\n"
-                    f"指定できるタイムゾーンは https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568 です。"
+                    f":no_entry_sign: 指定したタイムゾーン {tz} はありません。\n"
+                    f":bulb: 指定できるタイムゾーンは https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568 です。"
                 )
         else:
-            await ctx.send(f"今のタイムゾーンは {self.timezone} です。")
+            await ctx.send(f":bulb: 今のタイムゾーンは {self.timezone} です。")
 
     @cron.command(name="enable")
     async def enable_cron(self, ctx):
         self.default_channel = ctx.channel
         await self._load_userdata()
         await self.bot.change_presence(
-            activity=Activity(type=ActivityType.unknown, name="Enable Cron")
+            activity=Activity(type=ActivityType.listening, name="Cron"), status=None
         )
         self.tick.start()
-        await self.default_channel.send(":sun_with_face: 自動実行を有効にしました。")
+        await self.default_channel.send(":yum: 自動実行を有効にしました。")
 
     @cron.command(name="show")
     async def show_schedule(self, ctx):
@@ -171,20 +177,20 @@ class Cron(commands.Cog):
             table.append([k, *crontab, v[1]])
         formatted_description = tabulate(table, headers, tablefmt="simple")
         await ctx.channel.send(
-            f"{len(self.userdata)} 件のスケジュールが登録されています\n```{formatted_description}```"
+            f":bulb: {len(self.userdata)} 件のスケジュールが登録されています\n```{formatted_description}```"
         )
 
     @cron.command(name="del")
     async def delete_schedule(self, ctx, name):
         self.userdata.pop(name)
         await self._save_userdata()
-        await ctx.send(f"スケジュール `{name}` を除去しました。")
+        await ctx.send(f":yum: スケジュール `{name}` を除去しました。")
 
     @cron.command(name="add")
     async def add_schedule(self, ctx, name, m, h, dom, mon, dow, *cmd):
         crontab = " ".join([m, h, dom, mon, dow])
         if not croniter.is_valid(crontab):
-            await ctx.send(f"スケジュール `{crontab}` が不正です。")
+            await ctx.send(f":no_entry_sign: スケジュール `{crontab}` が不正です。")
         else:
             escaped_cmds = " ".join((f'"{i}"' if " " in i else i for i in cmd))
             new_record = {name: [crontab, escaped_cmds]}
@@ -192,7 +198,7 @@ class Cron(commands.Cog):
             await self._save_userdata()
         next_run = self._strftime(croniter(crontab, self._now()).get_next(dt))
         await ctx.send(
-            f"スケジュール `{name}` を追加しました。\n"
+            f":yum: スケジュール `{name}` を追加しました。\n"
             f"次回実行予定は {next_run} です。\n"
             f"実行されるコマンドは `{escaped_cmds}` です。"
         )
@@ -204,11 +210,11 @@ class Cron(commands.Cog):
             await self._load_userdata()
             await ctx.send(":yum: スケジュールをアップロードしました。")
         except BaseException:
-            await ctx.send(":hot_face: スケジュールをアップロードできませんでした。")
+            await ctx.send(":no_entry_sign: スケジュールをアップロードできませんでした。")
 
     @cron.command(name="get")
     async def get_userdata(self, ctx):
-        await ctx.send("現在のスケジュールデータです。", file=File(USERDATA_PATH))
+        await ctx.send(":bulb: 現在のスケジュールデータです。", file=File(USERDATA_PATH))
 
     async def _save_userdata(self):
         async with aiofiles.open(USERDATA_PATH, mode="w", encoding="utf-8") as afp:
@@ -226,11 +232,13 @@ class Cron(commands.Cog):
     @cron.command(name="load")
     async def load_schedules(self, ctx):
         await self._load_userdata()
-        await ctx.send(f"{len(self.userdata)} 件のスケジュールをロードしました。")
+        await ctx.send(f":yum: {len(self.userdata)} 件のスケジュールをロードしました。")
 
     def cog_unload(self):
         self.tick.cancel()
-        self.bot.change_presence(activity=None, status=None)
+        self.bot.change_presence(
+            activity=Activity(type=ActivityType.unknown, name=""), status=None
+        )
 
 
 def setup(bot):

@@ -2,5 +2,9 @@
     "test2": [
         "*/1 * * * *",
         "/tpoll \"Event on {{3.days}}~{{4.days}}\" 5 \"I'm Join!\" Damn.."
+    ],
+    "test3": [
+        "10 * * 12 *",
+        "/tpoll \"Event on {{3.days}}~{{4.days}}\" 5 \"I'm Join!\" Damn.."
     ]
 }
