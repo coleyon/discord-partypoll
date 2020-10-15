@@ -1,4 +1,8 @@
 {
+    "test1": [
+        "5 22 * * *",
+        "/epoll title [1]a \"[5] \u3044\" woo"
+    ],
     "test2": [
         "*/1 * * * *",
         "/tpoll \"Event on {{3.days}}~{{4.days}}\" 5 \"I'm Join!\" Damn.."

@@ -203,7 +203,7 @@ class Cron(commands.Cog):
             f"実行されるコマンドは `{escaped_cmds}` です。"
         )
 
-    @cron.command(name="upload")
+    @cron.command(name="load")
     async def upload_userdata(self, ctx):
         try:
             await ctx.message.attachments[0].save(fp=USERDATA_PATH)
@@ -228,11 +228,6 @@ class Cron(commands.Cog):
             async with aiofiles.open(USERDATA_PATH, mode="w", encoding="utf-8") as afp:
                 self.userdata = {}
                 json.dump(self.userdata, afp)
-
-    @cron.command(name="load")
-    async def load_schedules(self, ctx):
-        await self._load_userdata()
-        await ctx.send(f":yum: {len(self.userdata)} 件のスケジュールをロードしました。")
 
     def cog_unload(self):
         self.tick.cancel()
