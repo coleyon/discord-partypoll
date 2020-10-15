@@ -70,7 +70,7 @@ InplaceDate:
 
     In such a case, specify the COMMAND part as follows.
 
-    /tpoll "Event on {{days.3}}" 5 "I'm Join!" "Damn.."
+    /tpoll "Event on {{3.days}}~{{4.days}}" 5 "I'm Join!" "Damn.."
 ```"""
 
 
@@ -106,19 +106,22 @@ class Cron(commands.Cog):
             if croniter.match(v[0], current):
                 await self.default_channel.send(f"{v[1]}")
 
-    # def IC(self, n):
-    #     d = self._now() + relativedelta()
-    #     return d.strftime("%m/%d")
+    def IC(self, n):
+        offset = re.sub(r"\{\{(\d+)\.days\}\}", r"\1", n)
+        d = self._now() + relativedelta(days=int(offset))
+        return d.strftime("%m/%d")
 
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author == self.bot.user:
             if message.content.startswith("/"):
                 ctx = await self.bot.get_context(message)
-                # replaced_message = re.sub(
-                #     r"\{\{days\.\d+\}\}", lambda x: self.IC(x.group()), message.content
-                # )
-                m = shlex.split(message.content)
+                replaced_message = re.sub(  # (∩´∀｀)∩
+                    r"\{\{(\d+)\.days\}\}",
+                    lambda x: self.IC(x.group()),
+                    message.content,
+                )
+                m = shlex.split(replaced_message)
                 cmd = m[0][1:]
                 query = m[1:]
                 await ctx.invoke(self.bot.get_command(cmd), *query)

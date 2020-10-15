@@ -1,6 +1,6 @@
 {
-    "test1": [
+    "test2": [
         "*/1 * * * *",
-        "/tpoll \"Event on {{3.days}}\" 5 \"I'm Join!\" Damn.."
+        "/tpoll \"Event on {{3.days}}~{{4.days}}\" 5 \"I'm Join!\" Damn.."
     ]
 }
