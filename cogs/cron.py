@@ -21,56 +21,75 @@ Schedule = namedtuple(
     "Schedule", ("guild_id", "channel_id", "register_id", "cron", "command")
 )
 tabulate.WIDE_CHARS_MODE = True
-HELP_TEXT = """```[Cron like Scheduler]
+HELP_TEXT = """```[Cron]
 
-Synopsis:
-    /cron add <SCHEDULE_NAME> <SCHEDULE> <COMMAND> - add a schedule.
-    /cron del <SCHEDULE_NAME> - remove specified schedule
-    /cron show - show list of registered schedules.
-    /cron get - download a schedule file formatted with json.
-    /cron load - upload a schedule file formatted with json.
+クイックスタート:
+    ※基準時を米国東部時間にして、コマンドを登録して、動作モードにする例
+    /cron timezone EST
+    /cron add Schedule-A */1 * * * * /tpoll "It is TITLE" 5 a b c
+    /cron enable
+
+    ※登録したコマンドをファイルに保管してから削除し、停止モードにする例
+    /cron get
+    /cron del Schedule-A
+    /cron disable
+
+コマンド:
+    /cron add <SCHEDULE_NAME> <SCHEDULE> <COMMAND> - スケジュールを登録する
+    /cron del <SCHEDULE_NAME> - スケジュールを削除する
+    /cron show - スケジュールの一覧を見る
+    /cron get - スケジュールをjson形式のファイルに書き出してダウンロード可能にする
+    /cron load - json形式のファイルをアップロードしてスケジュールをロードさせる
+    /cron timezone - 今のタイムゾーン設定を見る
+    /cron timezone <TZ> - タイムゾーンを設定する（どこの国の時間で動くか）
+    /cron [help] - このヘルプを表示する
+    /cron enable - 動作モードにする（スケジュールが実行されます）
+    /cron enable - 停止モードにする（スケジュールが実行されません）
 
 SCHEDULE_NAME:
-    Name of the schedule.
+    スケジュール名（任意の名前）
 
 SCHEDULE:
     * * * * *
     | | | | |
     | | | | |
-    | | | | +---- Day of the Week   (range: 0-6 or mon,tue,wed,thu,fri,sat,sun)
-    | | | +------ Month of the Year (range: 1-12)
-    | | +-------- Day of the Month  (range: 1-31)
-    | +---------- Hour              (range: 0-23)
-    +------------ Minute            (range: 0-59)  # every n day in month.
-    Expression Field Description
-    ----------------------------------
-    *        any    Fire on every value
-    */a      any    Fire every a values, starting from the minimum
-    a-b      any    Fire on any value within the a-b range (a must be smaller than b)
-    a-b/c    any    Fire every c values within the a-b range
-    x,y,z    any    Fire on any matching expression; can combine any number of any of the above expressions
+    | | | | +---- 曜日 (0-6 または mon,tue,wed,thu,fri,sat,sun)
+    | | | +------ 月 (1-12)
+    | | +-------- 日 (1-31)
+    | +---------- 時 (0-23)
+    +------------ 分 (0-59)
 
-    Examples:
-        */1 * * * *      : runs at every minutes.
-        59 * * * sun     : runs at 59 minutes every hour
-        0 14,21 * * *    : runs at 14:00 and 21:00 every day.
-        40-50 3 25 12 *  : runs from 3:40 to 3:50 on December 25th.
+    SCHEDULEに指定できる値
+    ----------------------------------
+    *     : 全ての値で動作する（分に指定すると毎分の意）
+    */a   : 毎 a で動作する（月に指定すると毎 a 月の意）
+    a-b   : a から b の間で動作する（時に指定すると a ～ b 時の意）
+    a-b/c : a から b にかけて毎 c に動作する（時に 9-17/2 と指定すると、9～17時にかけて2時間毎の意）
+    x,y,z : x と y と z に動作する（月に 4,10 と指定すると、4月と10月の意）
+
+    具体例
+    ----------------------------------
+    * * * * *        : 毎分
+    */2 * * * *      : 2分毎
+    59 * * * sun     : 日曜日の毎時59分
+    0 14,21 * * *    : 毎日 14:00 と 21:00 
+    40-50 3 25 12 *  : 12/25 3:40～3:50 にかけて毎分
 
 COMMAND:
-    The Commands executed on the specified schedule.
-    i.e.: /tpoll title 5 "first question" "second question"
+    <SCHEDULE> で指定したタイミングに実行される Discordのコマンド。
+    例: /tpoll イベントだよ! 5 "花見" "クリスマス"
 
-InplaceDate:
-    For example, you want to notify members 
-    about a date three days after the command execution date.
-    Let's assume that the command execution date is December 21st
-    and the event date is December 24th.
+    拡張
+    ----------------------------------
+    コマンド実行時から見てn日後となる日付を、コマンドの内容に差し込む機能です。
+    例えば、毎週月曜～火曜に開催されるイベントの募集を出すコマンドを、
+    前の週の金曜日に定時実行させたい場合などに使えます。
+    この例で言えば、COMMAND部を以下のように指定できます。
+    /tpoll "定例イベント {{3.days}}～{{4.days}}" 5 "参加" "不参加"
 
-    /tpoll "Event on 12/24(Mon)" 5 "I'm Join!" "Damn.."
-
-    In such a case, specify the COMMAND part as follows.
-
-    /tpoll "Event on {{3.days}}~{{4.days}}" 5 "I'm Join!" "Damn.."
+    このコマンドが実行されたタイミングが10/1だとしたら、
+    以下のコマンドが実際には動きます。
+    /tpoll "定例イベント 10/4～10/5" 5 "参加" "不参加"
 ```"""
 
 

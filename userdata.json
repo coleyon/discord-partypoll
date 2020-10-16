@@ -1,4 +1,8 @@
 {
+    "Schedule-A": [
+        "*/1 * * * *",
+        "/tpoll \"It is TITLE\" 5 a b c"
+    ],
     "test1": [
         "5 22 * * *",
         "/epoll title [1]a \"[5] \u3044\" woo"
