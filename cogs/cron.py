@@ -44,7 +44,7 @@ HELP_TEXT = """```[Cron]
     /cron timezone <TZ> - タイムゾーンを設定する（どこの国の時間で動くか）
     /cron [help] - このヘルプを表示する
     /cron enable - 動作モードにする（スケジュールが実行されます）
-    /cron enable - 停止モードにする（スケジュールが実行されません）
+    /cron disable - 停止モードにする（スケジュールが実行されません）
 
 SCHEDULE_NAME:
     スケジュール名（任意の名前）
