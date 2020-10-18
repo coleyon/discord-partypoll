@@ -108,7 +108,6 @@ class Cron(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.default_channel = None
         await self._load_userdata()
         await self.bot.change_presence(
             activity=Activity(type=ActivityType.unknown, name=""), status=None
@@ -123,10 +122,11 @@ class Cron(commands.Cog):
     @tasks.loop(minutes=1.0, reconnect=True)
     async def tick(self):
         current = self._now()
-        # await self._load_userdata()
         for k, v in self.userdata.items():
-            if croniter.match(v[0], current):
-                await self.default_channel.send(f"{v[1]}")
+            if croniter.match(v["schedule"], current):
+                cmd = v["command"]
+                ch = self.bot.get_channel(v["channel_id"])
+                await ch.send(f"{cmd}")
         await self.bot.change_presence(
             activity=Activity(type=ActivityType.listening, name="Cron"), status=None
         )
@@ -161,7 +161,7 @@ class Cron(commands.Cog):
         await self.bot.change_presence(
             activity=Activity(type=ActivityType.unknown, name=""), status=None
         )
-        await self.default_channel.send(":yum: 自動実行を無効にしました。")
+        await ctx.channel.send(":yum: 自動実行を無効にしました。")
 
     @cron.command(name="timezone")
     async def set_timezone(self, ctx, tz=None):
@@ -179,21 +179,20 @@ class Cron(commands.Cog):
 
     @cron.command(name="enable")
     async def enable_cron(self, ctx):
-        self.default_channel = ctx.channel
         await self._load_userdata()
         await self.bot.change_presence(
             activity=Activity(type=ActivityType.listening, name="Cron"), status=None
         )
         self.tick.start()
-        await self.default_channel.send(":yum: 自動実行を有効にしました。")
+        await ctx.channel.send(":yum: 自動実行を有効にしました。")
 
     @cron.command(name="show")
     async def show_schedule(self, ctx):
         headers = ["名前", "分", "時", "日", "月", "曜日", "コマンド"]
         table = []
         for k, v in self.userdata.items():
-            crontab = v[0].split(" ")
-            table.append([k, *crontab, v[1]])
+            crontab = v["schedule"].split(" ")
+            table.append([k, *crontab, v["command"]])
         formatted_description = tabulate(table, headers, tablefmt="simple")
         await ctx.channel.send(
             f":bulb: {len(self.userdata)} 件のスケジュールが登録されています\n```{formatted_description}```"
@@ -212,8 +211,13 @@ class Cron(commands.Cog):
             await ctx.send(f":no_entry_sign: スケジュール `{crontab}` が不正です。")
         else:
             escaped_cmds = " ".join((f'"{i}"' if " " in i else i for i in cmd))
-            new_record = {name: [crontab, escaped_cmds]}
-            self.userdata = {**self.userdata, **new_record}
+            self.userdata[name] = {
+                "command": escaped_cmds,
+                "server_id": ctx.guild.id,
+                "channel_id": ctx.channel.id,
+                "author": ctx.message.author.id,
+                "schedule": crontab,
+            }
             await self._save_userdata()
         next_run = self._strftime(croniter(crontab, self._now()).get_next(dt))
         await ctx.send(

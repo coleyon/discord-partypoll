@@ -1,18 +1,9 @@
 {
-    "Schedule-A": [
-        "*/1 * * * *",
-        "/tpoll \"It is TITLE\" 5 a b c"
-    ],
-    "test1": [
-        "5 22 * * *",
-        "/epoll title [1]a \"[5] \u3044\" woo"
-    ],
-    "test2": [
-        "*/1 * * * *",
-        "/tpoll \"Event on {{3.days}}~{{4.days}}\" 5 \"I'm Join!\" Damn.."
-    ],
-    "test3": [
-        "10 * * 12 *",
-        "/tpoll \"Event on {{3.days}}~{{4.days}}\" 5 \"I'm Join!\" Damn.."
-    ]
+    "test1": {
+        "author": 683182519880908800,
+        "channel_id": 763369102231207937,
+        "command": "/tpoll title 5 a b c",
+        "schedule": "*/1 * * * *",
+        "server_id": 707625856348192845
+    }
 }
