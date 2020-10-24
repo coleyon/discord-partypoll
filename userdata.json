@@ -1,9 +1,0 @@
-{
-    "test1": {
-        "author": 683182519880908800,
-        "channel_id": 763369102231207937,
-        "command": "/tpoll title 5 a b c",
-        "schedule": "*/1 * * * *",
-        "server_id": 707625856348192845
-    }
-}

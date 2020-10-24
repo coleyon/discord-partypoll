@@ -24,6 +24,6 @@ async def ext(ctx, method, ext_name):
         await ctx.channel.send("{name} をアンロードしました".format(name=ext_name))
 
 
-bot.load_extension("cogs.poll")
-bot.load_extension("cogs.cron")
+# bot.load_extension("cogs.poll")
+# bot.load_extension("cogs.cron")
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))

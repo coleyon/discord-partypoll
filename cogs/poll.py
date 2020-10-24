@@ -5,6 +5,7 @@ from discord.utils import get
 from discord import Embed
 import re
 
+
 RE_LIMIT = r"^\[(\d+)\].+$"
 ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
 EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
@@ -15,11 +16,11 @@ TOTAL_POLL = "[質問全体での人数制限]"
 COLORS = {EACH_POLL: discord.Colour.magenta(), TOTAL_POLL: discord.Colour.green()}
 HELP_TEXT = """[Party Poll]
 
-SYNOPSIS:
-  `/epoll <TITLE> <[[LIMIT_OF_THE_QUESTION]]QUESTION_1>...<[[LIMIT_OF_THE_QUESTION_10]]QUESTION_10>`
-  `/tpoll <TITLE> <LIMIT_OF_QUESTIONS> <QUESTION_1>...[QUESTION_10]`
+Synopsis:
+  `/poll each <TITLE> <[[LIMIT_OF_THE_QUESTION]]QUESTION_1>...<[[LIMIT_OF_THE_QUESTION_10]]QUESTION_10>`
+  `/poll total <TITLE> <LIMIT_OF_QUESTIONS> <QUESTION_1>...[QUESTION_10]`
 
-OPTIONS:
+Options:
   TITLE:
     Title text of the poll.
 
@@ -43,6 +44,11 @@ class Poll(commands.Cog):
     async def cog_command_error(self, ctx, error):
         if not ctx.author.bot:
             await ctx.channel.send(HELP_TEXT)
+
+    @commands.group()
+    async def poll(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await ctx.send(HELP_TEXT)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -157,12 +163,12 @@ class Poll(commands.Cog):
             ]
         )
 
-    @commands.command(name="poll_help")
+    @poll.command(name="help")
     async def help_text(self, ctx):
         if not ctx.author.bot:
             await ctx.channel.send(HELP_TEXT)
 
-    @commands.command(name="tpoll")
+    @poll.command(name="total")
     async def make_total_poll(self, ctx, title, limit, *args):
         """Total Poll"""
         if len(args) > len(EMOJIS):
@@ -184,7 +190,7 @@ class Poll(commands.Cog):
         for num, _ in enumerate(args):
             await message.add_reaction(EMOJIS[num])
 
-    @commands.command(name="epoll")
+    @poll.command(name="each")
     async def make_each_poll(self, ctx, title, *args):
         """Each Poll"""
         if len(args) > len(EMOJIS):
@@ -214,4 +220,3 @@ class Poll(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Poll(bot))
-
