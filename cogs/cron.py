@@ -26,7 +26,7 @@ HELP_TEXT = """```[Cron]
 クイックスタート:
     ※基準時を米国東部時間にして、コマンドを登録して、動作モードにする例
     /cron timezone EST
-    /cron add Schedule-A */1 * * * * /tpoll "It is TITLE" 5 a b c
+    /cron add Schedule-A */1 * * * * /ppoll total "It is TITLE" 5 a b c
     /cron enable
 
     ※登録したコマンドをファイルに保管してから削除し、停止モードにする例
@@ -136,20 +136,30 @@ class Cron(commands.Cog):
         d = self._now() + relativedelta(days=int(offset))
         return d.strftime("%m/%d")
 
+    async def _dig(self, msg: list):
+        '''get a command or sub-command instance and query from the message'''
+        options = msg.copy()
+        cmd = self.bot.all_commands[options.pop(0)]
+        while True:
+            cmd = cmd.all_commands[options.pop(0)]
+            if isinstance(cmd, commands.core.Command):
+                break
+        return [cmd, options]
+
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author == self.bot.user:
             if message.content.startswith("/"):
                 ctx = await self.bot.get_context(message)
-                replaced_message = re.sub(  # (∩´∀｀)∩
+                replaced_message = re.sub(
                     r"\{\{(\d+)\.days\}\}",
                     lambda x: self.IC(x.group()),
                     message.content,
                 )
                 m = shlex.split(replaced_message)
-                cmd = m[0][1:]
-                query = m[1:]
-                await ctx.invoke(self.bot.get_command(cmd), *query)
+                m[0] = m[0][1:]
+                cmd = await self._dig(m)
+                await ctx.invoke(cmd[0], *cmd[1])
 
     @tick.before_loop
     async def before_tick(self):

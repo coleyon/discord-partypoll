@@ -1,1 +1,9 @@
-{}
+{
+    "Schedule-A": {
+        "author": 683182519880908800,
+        "channel_id": 769218663659208754,
+        "command": "/ppoll total \"It is TITLE\" 5 a b c",
+        "schedule": "*/1 * * * *",
+        "server_id": 707625856348192845
+    }
+}
