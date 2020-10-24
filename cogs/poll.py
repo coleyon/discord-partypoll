@@ -14,25 +14,28 @@ SEP = ","
 EACH_POLL = "[質問ごとの人数制限]"
 TOTAL_POLL = "[質問全体での人数制限]"
 COLORS = {EACH_POLL: discord.Colour.magenta(), TOTAL_POLL: discord.Colour.green()}
-HELP_TEXT = """[Party Poll]
+HELP_TEXT = """```[Party Poll]
 
-Synopsis:
-  `/poll each <TITLE> <[[LIMIT_OF_THE_QUESTION]]QUESTION_1>...<[[LIMIT_OF_THE_QUESTION_10]]QUESTION_10>`
-  `/poll total <TITLE> <LIMIT_OF_QUESTIONS> <QUESTION_1>...[QUESTION_10]`
+クイックスタート:
+  /ppoll each それぞれ参加人数が違うイベント [5]お花見 [3]BBQ 人数制限なし鍋パー
+  /ppoll total 10名分の予算がある3種のイベント 10 お花見 BBQ 鍋パー
 
-Options:
-  TITLE:
-    Title text of the poll.
+コマンド(<> は実際には入力しません):
+  /ppoll each <TITLE> <[EACH_LIMIT_n]QUESTION_n> - アンケートを出す（質問毎に回答数制限を指定可）
+  /ppoll total <TITLE> <TOTAL_LIMIT> <QUESTION_n> - アンケートを出す（質問全体に回答数制限を指定可）
 
-  LIMIT_OF_THE_QUESTION:
-    Limit Number of reaction count of each question. (0-n)
+TITLE:
+    Pollのタイトル
 
-  LIMIT_OF_QUESTIONS:
-    Total Limit number of reactions count of all question. (0-n)
+EACH_LIMIT_n:
+    個々の質問に回答できる最大の人数。省略すると無制限。
 
-  QUESTION(S):
-    Text of the question(s).
-"""
+TOTAL_LIMIT:
+    全ての質問に回答できる最大の人数。省略できない。
+
+QUESTION_n:
+    質問文。最大10個まで指定可能。
+```"""
 
 
 class Poll(commands.Cog):
@@ -45,7 +48,7 @@ class Poll(commands.Cog):
         if not ctx.author.bot:
             await ctx.channel.send(HELP_TEXT)
 
-    @commands.group()
+    @commands.group(name="ppoll")
     async def poll(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send(HELP_TEXT)

@@ -15,6 +15,7 @@ async def on_ready():
 
 
 @bot.command(name="ext")
+@commands.has_permissions(manage_guild=True)
 async def ext(ctx, method, ext_name):
     if method == "load":
         bot.load_extension("cogs.{name}".format(name=ext_name))
@@ -24,6 +25,6 @@ async def ext(ctx, method, ext_name):
         await ctx.channel.send("{name} をアンロードしました".format(name=ext_name))
 
 
-# bot.load_extension("cogs.poll")
-# bot.load_extension("cogs.cron")
+bot.load_extension("cogs.poll")
+bot.load_extension("cogs.cron")
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
