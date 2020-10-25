@@ -221,7 +221,7 @@ class Cron(commands.Cog):
     @cron.command(name="add")
     async def add_schedule(self, ctx, name, m, h, dom, mon, dow, *cmd):
         crontab = " ".join([m, h, dom, mon, dow])
-        escaped_cmds = ""
+        escaped_cmds = None
         if not croniter.is_valid(crontab):
             await ctx.send(f":no_entry_sign: スケジュール `{crontab}` が不正です。")
         else:
