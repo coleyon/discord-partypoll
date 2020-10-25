@@ -136,20 +136,24 @@ class Cron(commands.Cog):
         d = self._now() + relativedelta(days=int(offset))
         return d.strftime("%m/%d")
 
-    async def _dig(self, msg: list):
+    def _dig(self, msg: list):
         '''get a command or sub-command instance and query from the message'''
-        options = msg.copy()
-        cmd = self.bot.all_commands[options.pop(0)]
-        while True:
-            cmd = cmd.all_commands[options.pop(0)]
-            if isinstance(cmd, commands.core.Command):
-                break
-        return [cmd, options]
+        try:
+            options = msg.copy()
+            options[0] = options[0][1:]
+            cmd = self.bot.all_commands[options.pop(0)]
+            while True:
+                cmd = cmd.all_commands[options.pop(0)]
+                if isinstance(cmd, commands.core.Command):
+                    break
+            return [cmd, options]
+        except KeyError:
+            return None
 
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author == self.bot.user:
-            if message.content.startswith("/"):
+            if message.content.startswith(self.bot.command_prefix):
                 ctx = await self.bot.get_context(message)
                 replaced_message = re.sub(
                     r"\{\{(\d+)\.days\}\}",
@@ -157,9 +161,9 @@ class Cron(commands.Cog):
                     message.content,
                 )
                 m = shlex.split(replaced_message)
-                m[0] = m[0][1:]
-                cmd = await self._dig(m)
-                await ctx.invoke(cmd[0], *cmd[1])
+                cmd = self._dig(m)
+                if cmd:
+                    await ctx.invoke(cmd[0], *cmd[1])
 
     @tick.before_loop
     async def before_tick(self):
@@ -217,9 +221,13 @@ class Cron(commands.Cog):
     @cron.command(name="add")
     async def add_schedule(self, ctx, name, m, h, dom, mon, dow, *cmd):
         crontab = " ".join([m, h, dom, mon, dow])
+        escaped_cmds = ""
         if not croniter.is_valid(crontab):
             await ctx.send(f":no_entry_sign: スケジュール `{crontab}` が不正です。")
         else:
+            if not self._dig(list(cmd)):
+                await ctx.send(":no_entry_sign: 他Botのコマンドは定時実行ができないので登録しませんでした。")
+                return
             escaped_cmds = " ".join((f'"{i}"' if " " in i else i for i in cmd))
             self.userdata[name] = {
                 "command": escaped_cmds,
