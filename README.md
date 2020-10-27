@@ -28,7 +28,8 @@ The discord bot contains few extentions.
   Synopsis:
     /cron add <SCHEDULE_NAME> <SCHEDULE> <COMMAND> - add a schedule.
     /cron del <SCHEDULE_NAME> - remove specified schedule
-    /cron show - show list of registered schedules.
+    /cron show [SCHEDULE_NAME] - show list of registered schedules.
+    /cron check - show next run and target channel.
     /cron get - download a schedule file formatted with json.
     /cron load - upload a schedule file formatted with json.
     /cron timezone - show curent running timezone setting
@@ -36,6 +37,8 @@ The discord bot contains few extentions.
     /cron [help] - show this help
     /cron enable - enable running cron schedules
     /cron disable - disable running cron schedules
+    /cron set schedule <SCHEDULE_NAME> <SCHEDULE> - sets a crontab to the schedule
+    /cron set channel <SCHEDULE_NAME> - sets a channel to run the command
 
   format of the SCHEDULE:
       * * * * *

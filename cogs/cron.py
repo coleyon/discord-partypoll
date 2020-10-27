@@ -22,7 +22,7 @@ Schedule = namedtuple(
 )
 CMD_MAX_VISIBLE = 15
 tabulate.WIDE_CHARS_MODE = True
-HELP_TEXT = """```[Cron]
+HELP_TEXT = ["""```[Cron]
 
 クイックスタート:
     ※基準時を米国東部時間にして、コマンドを登録して、動作モードにする例
@@ -49,7 +49,7 @@ HELP_TEXT = """```[Cron]
     /cron disable - 停止モードにする（スケジュールが実行されません）
     /cron set schedule <SCHEDULE_NAME> <SCHEDULE> - 対象スケジュールを変更する
     /cron set channel <SCHEDULE_NAME> - 対象スケジュールの実行先チャンネルをこのコマンドを打ったチャンネルに変更する
-
+```""", """```
 SCHEDULE_NAME:
     スケジュール名（任意の名前）
 
@@ -92,7 +92,7 @@ COMMAND:
     /ppoll total "定例イベント {{3.days}}～{{4.days}}" 5 "参加" "不参加"
     すると、10/1に動くコマンドは以下のようになります。
     /ppoll total "定例イベント 10/4～10/5" 5 "参加" "不参加"
-```"""
+```"""]
 
 
 class Cron(commands.Cog):
@@ -119,7 +119,8 @@ class Cron(commands.Cog):
     @commands.group()
     async def cron(self, ctx):
         if ctx.invoked_subcommand is None:
-            await ctx.send(HELP_TEXT)
+            for helpmsg in HELP_TEXT:
+                await ctx.send(helpmsg)
 
     @tasks.loop(minutes=1.0, reconnect=True)
     async def tick(self):
@@ -253,7 +254,7 @@ class Cron(commands.Cog):
     @cron.group(name="set")
     async def set_subcmd(self, ctx):
         if ctx.invoked_subcommand is None:
-            await ctx.send(HELP_TEXT)
+            pass
 
     @set_subcmd.command(name="channel")
     async def set_channel(self, ctx, schedule_name):
