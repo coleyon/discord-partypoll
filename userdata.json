@@ -1,9 +1,23 @@
 {
-    "schedule-1": {
+    "Schedule-A": {
+        "author": 683182519880908800,
+        "channel_id": 763050728260239380,
+        "command": "/ppoll total \"\u30b3\u30f3\u30c6\u30f3\u30c4\u5217\u8eca {{6.days}}\uff08\u65e9\u767a\u4fbf\uff11PT\u5f8c\u767a\u4fbf3PT\u3006\u5207\u6bce\u9031\u65e5\u66dc21:00\uff09\" 24 \ud83d\udd58\u65e9\u767a\u4fbf21:00\uff5e21:30\u767a\uff08\u203b\uff16\u540d\u8fc4\uff09 \ud83d\udd59\u5f8c\u767a\u4fbf22:00\uff5e22:30\u767a \ud83e\udd17\u3069\u3061\u3089\u3067\u3082\u53ef",
+        "schedule": "*/1 * * * tue",
+        "server_id": 707625856348192845
+    },
+    "\u304a\u8a66\u3057\u7528\uff12\u30c1\u30e3\u30f3\u30cd\u30eb\u3067\u767b\u9332\u3057\u305f\u30b9\u30b1\u30b8\u30e5\u30fc\u30eb": {
+        "author": 683182519880908800,
+        "channel_id": 769218693984419891,
+        "command": "/ppoll each title a b c",
+        "schedule": "30 23 * * sun",
+        "server_id": 707625856348192845
+    },
+    "\u305f\u3060\u3057\u3044\u30b9\u30b1\u30b8\u30e5\u30fc\u30eb\u6307\u5b9a": {
         "author": 683182519880908800,
         "channel_id": 769218663659208754,
-        "command": "/ppoll total title 5 a b c",
-        "schedule": "*/1 * * * *",
+        "command": "/ppoll each title a b c",
+        "schedule": "2-4 12 * * thu",
         "server_id": 707625856348192845
     }
 }

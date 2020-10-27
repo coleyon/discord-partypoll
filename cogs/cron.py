@@ -10,8 +10,8 @@ from time import sleep
 from dateutil.relativedelta import relativedelta
 import aiofiles
 import pytz
-from croniter import croniter
-from discord import Activity, ActivityType, Colour, Embed, File, Status
+from croniter import croniter, CroniterBadCronError
+from discord import Activity, ActivityType, Colour, File, Status
 from discord.ext import commands, tasks
 from hashids import Hashids
 from tabulate import tabulate
@@ -20,6 +20,7 @@ USERDATA_PATH = os.getenv("USERDATA_PATH", default="userdata.json")
 Schedule = namedtuple(
     "Schedule", ("guild_id", "channel_id", "register_id", "cron", "command")
 )
+CMD_MAX_VISIBLE = 15
 tabulate.WIDE_CHARS_MODE = True
 HELP_TEXT = """```[Cron]
 
@@ -38,6 +39,7 @@ HELP_TEXT = """```[Cron]
     /cron add <SCHEDULE_NAME> <SCHEDULE> <COMMAND> - スケジュールを登録する
     /cron del <SCHEDULE_NAME> - スケジュールを削除する
     /cron show - スケジュールの一覧を見る
+    /cron check - スケジュールの正しさチェックする
     /cron get - スケジュールをjson形式のファイルに書き出してダウンロード可能にする
     /cron load - json形式のファイルをアップロードしてスケジュールをロードさせる
     /cron timezone - 今のタイムゾーン設定を見る
@@ -45,6 +47,8 @@ HELP_TEXT = """```[Cron]
     /cron [help] - このヘルプを表示する
     /cron enable - 動作モードにする（スケジュールが実行されます）
     /cron disable - 停止モードにする（スケジュールが実行されません）
+    /cron set schedule <SCHEDULE_NAME> <SCHEDULE> - 対象スケジュールを変更する
+    /cron set channel <SCHEDULE_NAME> - 対象スケジュールの実行先チャンネルをこのコマンドを打ったチャンネルに変更する
 
 SCHEDULE_NAME:
     スケジュール名（任意の名前）
@@ -147,7 +151,7 @@ class Cron(commands.Cog):
                 if isinstance(cmd, commands.core.Command):
                     break
             return [cmd, options]
-        except KeyError:
+        except BaseException:
             return None
 
     @commands.Cog.listener()
@@ -201,16 +205,23 @@ class Cron(commands.Cog):
         await ctx.channel.send(":yum: 自動実行を有効にしました。")
 
     @cron.command(name="show")
-    async def show_schedule(self, ctx):
-        headers = ["名前", "分", "時", "日", "月", "曜日", "コマンド"]
-        table = []
-        for k, v in self.userdata.items():
-            crontab = v["schedule"].split(" ")
-            table.append([k, *crontab, v["command"]])
-        formatted_description = tabulate(table, headers, tablefmt="simple")
-        await ctx.channel.send(
-            f":bulb: {len(self.userdata)} 件のスケジュールが登録されています\n```{formatted_description}```"
-        )
+    async def show_schedule(self, ctx, schedule_name=None):
+        if schedule_name:
+            # detail mode
+            detail = self.userdata[schedule_name]["command"]
+            await ctx.channel.send(f":bulb: スケジュール ```{schedule_name}``` によって実行されるコマンドは...\n```{detail}```\nです。")
+        else:
+            # summary mode
+            headers = ["名前", "分", "時", "日", "月", "曜日", "コマンド"]
+            table = []
+            for k, v in self.userdata.items():
+                crontab = v["schedule"].split(" ")
+                shoten_cmd = "{c}...".format(c=v["command"][:CMD_MAX_VISIBLE]) if len(v["command"]) > CMD_MAX_VISIBLE else v["command"]
+                table.append([k, *crontab, shoten_cmd])
+            formatted_description = tabulate(table, headers, tablefmt="simple")
+            await ctx.channel.send(
+                f":bulb: {len(self.userdata)} 件のスケジュールが登録されています\n```{formatted_description}```"
+            )
 
     @cron.command(name="del")
     async def delete_schedule(self, ctx, name):
@@ -218,15 +229,58 @@ class Cron(commands.Cog):
         await self._save_userdata()
         await ctx.send(f":yum: スケジュール `{name}` を除去しました。")
 
+    @cron.command(name="check")
+    async def check_schedule(self, ctx):
+        current = self._now()
+        table = []
+        for k, v in self.userdata.items():
+            if ctx.guild.id != v["server_id"]:
+                continue
+            try:
+                run_at = self._strftime(croniter(v["schedule"], current).get_next(dt))
+            except CroniterBadCronError:
+                run_at = "無し"
+            run_on = self.bot.get_channel(v["channel_id"])
+            if not run_on:
+                run_on = "無し"
+            author = await ctx.guild.fetch_member(v["author"])
+            author_name = "不明"
+            if author:
+                author_name = author.nick
+            table.append([run_at, run_on, k, author_name])
+
+        formatted_table = tabulate(table, ["次回実行日時", "実行先チャンネル", "スケジュール名", "登録した人"], tablefmt="simple")
+        await ctx.send(f":bulb: 直近の実行タイミングは次の通りです。\n```{formatted_table}```\nです。")
+
+    @cron.group(name="set")
+    async def set_subcmd(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await ctx.send(HELP_TEXT)
+
+    @set_subcmd.command(name="channel")
+    async def set_channel(self, ctx, schedule_name):
+        self.userdata[schedule_name]["channel_id"] = ctx.channel.id
+        await self._save_userdata()
+        await ctx.send(f":yum: ```{schedule_name}``` の実行先チャンネルを ```{ctx.channel.name}``` に変更しました。")
+
+    @set_subcmd.command(name="schedule")
+    async def set_schedule(self, ctx, schedule_name, schedule):
+        if croniter.is_valid(schedule):
+            self.userdata[schedule_name]["schedule"] = schedule
+            await self._save_userdata()
+            await ctx.send(f":yum: ```{schedule_name}``` のスケジュールを ```{schedule}``` に変更しました。")
+        else:
+            await ctx.send(f":no_entry_sign: ```{schedule}``` は正しくありません。")
+
     @cron.command(name="add")
     async def add_schedule(self, ctx, name, m, h, dom, mon, dow, *cmd):
         crontab = " ".join([m, h, dom, mon, dow])
         escaped_cmds = None
         if not croniter.is_valid(crontab):
-            await ctx.send(f":no_entry_sign: スケジュール `{crontab}` が不正です。")
+            await ctx.send(f":no_entry_sign: スケジュール ```{crontab}``` が不正です。")
         else:
             if not self._dig(list(cmd)):
-                await ctx.send(":no_entry_sign: 他Botのコマンドは定時実行ができないので登録しませんでした。")
+                await ctx.send(":no_entry_sign: 他Botのコマンドまたは正しくないコマンドは定時実行ができないので登録しませんでした。")
                 return
             escaped_cmds = " ".join((f'"{i}"' if " " in i else i for i in cmd))
             self.userdata[name] = {
