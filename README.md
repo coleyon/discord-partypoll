@@ -20,8 +20,8 @@ The discord bot contains few extentions.
 * `/help poll`
   ```
   Synopsis:
-    /poll each <TITLE> <[[LIMIT_OF_THE_QUESTION]]QUESTION_1> [<[[LIMIT_OF_THE_QUESTION]]QUESTION_1>]
-    /poll total <TITLE> <LIMIT_OF_QUESTIONS> <QUESTION_1> [<QUESTION_10>]
+    /ppoll each <TITLE> <[[LIMIT_OF_THE_QUESTION]]QUESTION_1> [<[[LIMIT_OF_THE_QUESTION]]QUESTION_1>]
+    /ppoll total <TITLE> <LIMIT_OF_QUESTIONS> <QUESTION_1> [<QUESTION_10>]
   ```
 * `/help cron`
   ```
@@ -69,8 +69,8 @@ The discord bot contains few extentions.
 
 ```
 /ext load poll
-/poll total "It is TITLE" 5 "Dance Party" "Summer Sonic Fest"
-/poll each "It is TITLE" "[4]Jazz Quartet Live" "Summer Sonic Fest"
+/ppoll total "It is TITLE" 5 "Dance Party" "Summer Sonic Fest"
+/ppoll each "It is TITLE" "[4]Jazz Quartet Live" "Summer Sonic Fest"
 ```
 
 **Cron** commands
@@ -79,7 +79,7 @@ The discord bot contains few extentions.
 Examples:
   /ext load cron
   /cron timezone EST
-  /cron add Schedule-A */1 * * * * /poll total "It is TITLE" 5 "Dance Party" "Summer Sonic Fest"
+  /cron add Schedule-A */1 * * * * /ppoll total "It is TITLE" 5 "Dance Party" "Summer Sonic Fest"
   /cron enable
 ```
 
