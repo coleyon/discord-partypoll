@@ -5,16 +5,14 @@ import re
 import shlex
 from collections import namedtuple
 from datetime import datetime as dt
-from datetime import timedelta as td
-from time import sleep
 from dateutil.relativedelta import relativedelta
 import aiofiles
 import pytz
 from croniter import croniter, CroniterBadCronError
-from discord import Activity, ActivityType, Colour, File, Status
+from discord import Activity, ActivityType, File
 from discord.ext import commands, tasks
-from hashids import Hashids
 from tabulate import tabulate
+from discord.ext.commands import TextChannelConverter, ChannelNotFound
 
 USERDATA_PATH = os.getenv("USERDATA_PATH", default="userdata.json")
 Schedule = namedtuple(
@@ -178,7 +176,7 @@ class Cron(commands.Cog):
         await self.bot.change_presence(
             activity=Activity(type=ActivityType.unknown, name=""), status=None
         )
-        await ctx.channel.send(":yum: 自動実行を無効にしました。")
+        await ctx.channel.send(":white_check_mark: 自動実行を無効にしました。")
 
     @cron.command(name="timezone")
     async def set_timezone(self, ctx, tz=None):
@@ -188,7 +186,7 @@ class Cron(commands.Cog):
                 await ctx.send(f"タイムゾーン {self.timezone} にセットしました。")
             else:
                 await ctx.send(
-                    f":no_entry_sign: 指定したタイムゾーン {tz} はありません。\n"
+                    f":x: 指定したタイムゾーン {tz} はありません。\n"
                     f":bulb: 指定できるタイムゾーンは https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568 です。"
                 )
         else:
@@ -201,14 +199,14 @@ class Cron(commands.Cog):
             activity=Activity(type=ActivityType.listening, name="Cron"), status=None
         )
         self.tick.start()
-        await ctx.channel.send(":yum: 自動実行を有効にしました。")
+        await ctx.channel.send(":white_check_mark: 自動実行を有効にしました。")
 
     @cron.command(name="show")
     async def show_schedule(self, ctx, schedule_name=None):
         if schedule_name:
             # detail mode
             detail = self.userdata[schedule_name]["command"]
-            await ctx.channel.send(f":bulb: スケジュール ```{schedule_name}``` によって実行されるコマンドは...\n```{detail}```\nです。")
+            await ctx.channel.send(f":bulb: スケジュール `{schedule_name}` によって実行されるコマンドは...\n`{detail}`\nです。")
         else:
             # summary mode
             headers = ["名前", "分", "時", "日", "月", "曜日", "コマンド"]
@@ -226,7 +224,7 @@ class Cron(commands.Cog):
     async def delete_schedule(self, ctx, name):
         self.userdata.pop(name)
         await self._save_userdata()
-        await ctx.send(f":yum: スケジュール `{name}` を除去しました。")
+        await ctx.send(f":white_check_mark: スケジュール `{name}` を除去しました。")
 
     @cron.command(name="check")
     async def check_schedule(self, ctx):
@@ -249,7 +247,7 @@ class Cron(commands.Cog):
             table.append([run_at, run_on, k, author_name])
 
         formatted_table = tabulate(table, ["次回実行日時", "実行先チャンネル", "スケジュール名", "登録した人"], tablefmt="simple")
-        await ctx.send(f":bulb: 直近の実行タイミングは次の通りです。\n```{formatted_table}```\nです。")
+        await ctx.send(f":bulb: 直近の実行タイミングは次の通りです。\n```{formatted_table}```")
 
     @cron.group(name="set")
     async def set_subcmd(self, ctx):
@@ -257,29 +255,48 @@ class Cron(commands.Cog):
             pass
 
     @set_subcmd.command(name="channel")
-    async def set_channel(self, ctx, schedule_name):
-        self.userdata[schedule_name]["channel_id"] = ctx.channel.id
-        await self._save_userdata()
-        await ctx.send(f":yum: ```{schedule_name}``` の実行先チャンネルを ```{ctx.channel.name}``` に変更しました。")
+    async def set_channel(self, ctx, schedule_name, channel: TextChannelConverter = None):
+        channel_id = None
+        channel_name = None
+        if channel:
+            try:
+                channel_id = channel.id
+                channel_name = channel.name
+            except ChannelNotFound:
+                await ctx.send(":x: チャンネルが見つけられません。")
+                return
+        else:
+            channel_id = ctx.channel.id
+            channel_name = ctx.channel.name
+        if schedule_name in self.userdata.keys():
+            self.userdata[schedule_name]["channel_id"] = channel_id
+            await self._save_userdata()
+            await ctx.send(f":white_check_mark: `{schedule_name}` の実行先チャンネルを `{channel_name}` に変更しました。")
+        else:
+            await ctx.send(f":x: スケジュール `{schedule_name}` がありません。")
 
     @set_subcmd.command(name="schedule")
-    async def set_schedule(self, ctx, schedule_name, schedule):
+    async def set_schedule(self, ctx, schedule_name, m, h, dom, mon, dow):
+        if schedule_name not in self.userdata.keys():
+            await ctx.send(f":x: スケジュール `{schedule_name}` がありません。")
+            return
+        schedule = " ".join([m, h, dom, mon, dow])
         if croniter.is_valid(schedule):
             self.userdata[schedule_name]["schedule"] = schedule
             await self._save_userdata()
-            await ctx.send(f":yum: ```{schedule_name}``` のスケジュールを ```{schedule}``` に変更しました。")
+            await ctx.send(f":white_check_mark: `{schedule_name}` のスケジュールを `{schedule}` に変更しました。")
         else:
-            await ctx.send(f":no_entry_sign: ```{schedule}``` は正しくありません。")
+            await ctx.send(f":x: `{schedule}` は正しくありません。")
 
     @cron.command(name="add")
     async def add_schedule(self, ctx, name, m, h, dom, mon, dow, *cmd):
         crontab = " ".join([m, h, dom, mon, dow])
         escaped_cmds = None
         if not croniter.is_valid(crontab):
-            await ctx.send(f":no_entry_sign: スケジュール ```{crontab}``` が不正です。")
+            await ctx.send(f":x: スケジュール `{crontab}` が不正です。")
         else:
             if not self._dig(list(cmd)):
-                await ctx.send(":no_entry_sign: 他Botのコマンドまたは正しくないコマンドは定時実行ができないので登録しませんでした。")
+                await ctx.send(":x: 他Botのコマンドまたは正しくないコマンドは定時実行ができないので登録しませんでした。")
                 return
             escaped_cmds = " ".join((f'"{i}"' if " " in i else i for i in cmd))
             self.userdata[name] = {
@@ -292,7 +309,7 @@ class Cron(commands.Cog):
             await self._save_userdata()
         next_run = self._strftime(croniter(crontab, self._now()).get_next(dt))
         await ctx.send(
-            f":yum: スケジュール `{name}` を追加しました。\n"
+            f":white_check_mark: スケジュール `{name}` を追加しました。\n"
             f"次回実行予定は {next_run} です。\n"
             f"実行されるコマンドは `{escaped_cmds}` です。"
         )
@@ -302,9 +319,9 @@ class Cron(commands.Cog):
         try:
             await ctx.message.attachments[0].save(fp=USERDATA_PATH)
             await self._load_userdata()
-            await ctx.send(":yum: スケジュールをアップロードしました。")
+            await ctx.send(":white_check_mark: スケジュールをアップロードしました。")
         except BaseException:
-            await ctx.send(":no_entry_sign: スケジュールをアップロードできませんでした。")
+            await ctx.send(":x: スケジュールをアップロードできませんでした。")
 
     @cron.command(name="get")
     async def get_userdata(self, ctx):
