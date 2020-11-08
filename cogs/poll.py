@@ -58,8 +58,11 @@ class Poll(commands.Cog):
         print("{name} Extension Enabled.".format(name=self.__cog_name__))
 
     async def _renew_reaction(self, reaction, user, is_remove=False):
-        old_embed = reaction.message.embeds[0]
-        desc = {n: s for n, s in enumerate(old_embed.description.split("\n"))}
+        old_embed = {
+            "title": reaction.message.content.split('\n')[:3],
+            "description": reaction.message.content.split('\n')[3:],
+        }
+        desc = {n: s for n, s in enumerate(old_embed["description"])}
         if reaction.emoji not in ORG_EMOJIS:
             # not poll reaction
             return
@@ -72,12 +75,12 @@ class Poll(commands.Cog):
         )
         limit_reaction_count = 0
         limit = -1
-        if EACH_POLL in old_embed.title:
+        if EACH_POLL in old_embed["title"]:
             limit = int(tmp[3]) if tmp[3].isnumeric() else -1
             limit_reaction_count = reaction.count - 1
-        elif TOTAL_POLL in old_embed.title:
+        elif TOTAL_POLL in old_embed["title"]:
             limit = int(
-                re.sub(r"^\(\d+/(\d+)\)$", r"\1", old_embed.description.split("\n")[0])
+                re.sub(r"^\(\d+/(\d+)\)$", r"\1", old_embed["title"][2])
             )
             limit_reaction_count = total_reaction_count
 
@@ -107,13 +110,12 @@ class Poll(commands.Cog):
         # update the line
         new_line = "".join(tmp)
         desc[key] = new_line
-        desc[0] = re.sub(r"\d+", str(total_reaction_count), desc[0], 1)
-        new_embed = Embed(
-            title=old_embed.title,
-            description="\n".join(desc.values()),
-            color=old_embed.color,
-        )
-        await reaction.message.edit(embed=new_embed)
+        # update total limitation and current total count
+        old_embed["title"][2] = re.sub(r"\d+", str(total_reaction_count), old_embed["title"][2], 1)
+
+        title_text = "\n".join(old_embed["title"])
+        content_text = "\n".join(desc.values())
+        await reaction.message.edit(content=f"{title_text}\n{content_text}")
 
     async def _get_reaction_ctx(self, payload):
         if payload.user_id == self.bot.user.id:
@@ -184,12 +186,9 @@ class Poll(commands.Cog):
                 for num, msg in enumerate(args)
             }.values()
         )
-        embed = discord.Embed(
-            title="\n".join([title, TOTAL_POLL]),
-            description="\n".join([*headers, *contents]),
-            color=COLORS[TOTAL_POLL],
-        )
-        message = await ctx.channel.send("", embed=embed)
+        title_text = "\n".join([title, TOTAL_POLL])
+        content_text = "\n".join([*headers, *contents])
+        message = await ctx.channel.send(f"{title_text}\n{content_text}")
         for num, _ in enumerate(args):
             await message.add_reaction(EMOJIS[num])
 
@@ -211,12 +210,9 @@ class Poll(commands.Cog):
                 for num, msg in enumerate(args)
             }.values()
         )
-        embed = discord.Embed(
-            title="\n".join([title, EACH_POLL]),
-            description="\n".join([*headers, *contents]),
-            color=COLORS[EACH_POLL],
-        )
-        message = await ctx.channel.send("", embed=embed)
+        title_text = "\n".join([title, EACH_POLL])
+        content_text = "\n".join([*headers, *contents])
+        message = await ctx.channel.send(f"{title_text}\n{content_text}")
         for num, _ in enumerate(args):
             await message.add_reaction(EMOJIS[num])
 
