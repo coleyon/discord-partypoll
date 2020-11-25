@@ -1,3 +1,5 @@
+'''Sentiment Analyzer (Google Language API) example code.'''
+
 import os
 import discord
 from discord.ext import commands
