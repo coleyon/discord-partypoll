@@ -117,3 +117,4 @@ Pipfile.lock
 .pytest_cache/
 .coverage
 # /userdata.json
+sa-key.json

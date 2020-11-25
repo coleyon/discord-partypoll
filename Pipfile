@@ -27,6 +27,8 @@ aiofiles = "*"
 pytz = "*"
 tabulate = {extras = ["widechars"],version = "*"}
 python-dateutil = "*"
+oauth2client = "*"
+google-cloud-language = "*"
 
 [requires]
 python_version = "3.8"
