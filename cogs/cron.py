@@ -164,38 +164,37 @@ class Cron(commands.Cog):
             self.userdata.pop(name)
             await self._save_userdata()
             await ctx.send(f":white_check_mark: スケジュール `{name}` を除去しました。")
+            logger.error(f"Schedule {name} deleted.")
         except BaseException as e:
             logger.error(f"Deleting schedule command failed, {e}.")
 
     @cron.command(name="check")
     async def check_schedule(self, ctx):
-        current = self._now()
         table = []
         for k, v in self.userdata.items():
             if ctx.guild.id != v["server_id"]:
                 continue
-            try:
-                run_at = self._strftime(croniter(v["schedule"], current).get_next(dt))
-            except CroniterBadCronError:
-                run_at = "無し"
-            run_on = self.bot.get_channel(v["channel_id"])
-            if not run_on:
-                run_on = "無し"
+            # get next running
+            run_at = self._strftime(croniter(v["schedule"], self._now()).get_next(dt)) if croniter.is_valid(v["schedule"]) else None
+            # get target channel
+            run_on = self.bot.get_channel(v["channel_id"]) if "channel_id" in v.keys() and v["channel_id"] else None
+            # get author
             author = await ctx.guild.fetch_member(v["author"])
-            author_name = "不明"
-            if author:
-                author_name = author.nick
+            author_name = author.nick if author else "Unknown"
             table.append([run_at, run_on, k, author_name])
 
-        formatted_table = tabulate(table, ["次回実行日時", "実行先チャンネル", "スケジュール名", "登録した人"], tablefmt="simple")
-        await ctx.send(f":bulb: 直近の実行タイミングは次の通りです。\n```{formatted_table}```")
+        if len(table):
+            formatted_table = tabulate(table, ["次回実行日時", "実行先チャンネル", "スケジュール名", "登録した人"], tablefmt="simple")
+            await ctx.send(f":bulb: 直近の実行タイミングは次の通りです。\n```{formatted_table}```")
+        else:
+            await ctx.send(":bulb: 登録されているスケジュールはありません。")
 
-    @cron.group(name="set")
+    @ cron.group(name="set")
     async def set_subcmd(self, ctx):
         if ctx.invoked_subcommand is None:
-            pass
+            ctx.send(":x: コマンドが不正です。")
 
-    @set_subcmd.command(name="channel")
+    @ set_subcmd.command(name="channel")
     async def set_channel(self, ctx, schedule_name, channel: TextChannelConverter = None):
         channel_id = None
         channel_name = None
@@ -218,7 +217,7 @@ class Cron(commands.Cog):
             await ctx.send(f":x: スケジュール `{schedule_name}` がありません。")
             logger.debug("Schedule running dest channel changing has failed.")
 
-    @set_subcmd.command(name="schedule")
+    @ set_subcmd.command(name="schedule")
     async def set_schedule(self, ctx, schedule_name, m, h, dom, mon, dow):
         if schedule_name not in self.userdata.keys():
             await ctx.send(f":x: スケジュール `{schedule_name}` がありません。")
@@ -231,12 +230,13 @@ class Cron(commands.Cog):
         else:
             await ctx.send(f":x: `{schedule}` は正しくありません。")
 
-    @cron.command(name="add")
+    @ cron.command(name="add")
     async def add_schedule(self, ctx, name, m, h, dom, mon, dow, *cmd):
         crontab = " ".join([m, h, dom, mon, dow])
         escaped_cmds = None
         if not croniter.is_valid(crontab):
             await ctx.send(f":x: スケジュール `{crontab}` が不正です。")
+            return
         else:
             if not self._dig(list(cmd)):
                 await ctx.send(":x: 他Botのコマンドまたは正しくないコマンドは定時実行ができないので登録しませんでした。")
@@ -259,7 +259,7 @@ class Cron(commands.Cog):
             f"実行されるコマンドは `{escaped_cmds}` です。"
         )
 
-    @cron.command(name="load")
+    @ cron.command(name="load")
     async def upload_userdata(self, ctx):
         try:
             await ctx.message.attachments[0].save(fp=USERDATA_PATH)
@@ -270,7 +270,7 @@ class Cron(commands.Cog):
             await ctx.send(":x: スケジュールをアップロードできませんでした。")
             logger.debug(f"Could not uploaded file saved to {USERDATA_PATH}, reason: {e}.")
 
-    @cron.command(name="get")
+    @ cron.command(name="get")
     async def get_userdata(self, ctx):
         await ctx.send(":bulb: 現在のスケジュールデータです。", file=File(USERDATA_PATH))
 

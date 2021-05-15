@@ -30,6 +30,7 @@ python-dateutil = "*"
 oauth2client = "*"
 google-cloud-language = "*"
 aiohttp = "==3.7.4.post0"
+pynacl = "*"
 
 [requires]
 python_version = "3.8"

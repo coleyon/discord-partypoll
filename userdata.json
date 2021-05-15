@@ -1,16 +1,1 @@
-{
-    "Schedule-A": {
-        "author": 683182519880908800,
-        "channel_id": 832815470276509706,
-        "command": "/ppoll total \"It is TITLE\" 5 a b c",
-        "schedule": "5 * * * *",
-        "server_id": 707625856348192845
-    },
-    "hourly-debug": {
-        "author": 683182519880908800,
-        "channel_id": 832815470276509706,
-        "command": "/ppoll total \"\u5b9a\u4f8b\u30a4\u30d9\u30f3\u30c8 {{2.days}}\" 5 \u53c2\u52a0 \u4e0d\u53c2\u52a0",
-        "schedule": "0 14,* * * *",
-        "server_id": 707625856348192845
-    }
-}
+{}

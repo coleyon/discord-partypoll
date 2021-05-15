@@ -34,6 +34,8 @@ class Ppoll(commands.Cog):
         logger.info("{name} Extension Enabled.".format(name=self.__cog_name__))
 
     async def _renew_reaction(self, reaction, user, is_remove=False):
+        reactioner = user.display_name.replace(SEP, "")  # remove comma from the name
+
         old_embed = {
             "title": reaction.message.content.split('\n')[:3],
             "description": reaction.message.content.split('\n')[3:],
@@ -64,15 +66,15 @@ class Ppoll(commands.Cog):
             # over the limit when reaction added
             await reaction.message.remove_reaction(reaction.emoji, user)
             await reaction.message.channel.send(
-                "{mention} さんへ\n{e}は満員だったのでリアクションを取り消しました。ごめんなさい:sob:\n{poll_url}".format(
+                "{mention}\n:x:{e}は満員だったのでリアクションを取り消しました。\n{poll_url}".format(
                     mention=user.mention,
                     e=reaction.emoji,
                     poll_url=reaction.message.jump_url,
                 )
             )
+            logger.info(f"Appending reaction by {reactioner} has skipped, because reached the limit. msgid={reaction.message.id}")
             return
 
-        reactioner = user.display_name.replace(SEP, "")  # remove comma from the name
         single_reaction_count = reaction.count - 1
         # update numbers of current members
         tmp[1] = str(single_reaction_count)
@@ -92,6 +94,7 @@ class Ppoll(commands.Cog):
         title_text = "\n".join(old_embed["title"])
         content_text = "\n".join(desc.values())
         await reaction.message.edit(content=f"{title_text}\n{content_text}")
+        logger.info(f"Updating reaction by {reactioner} has successed. msgid={reaction.message.id}")
 
     async def _get_reaction_ctx(self, payload):
         if payload.user_id == self.bot.user.id:
@@ -123,9 +126,9 @@ class Ppoll(commands.Cog):
         if contexts:
             try:
                 await self._renew_reaction(*contexts)
-                logger.info("Append reaction successed.")
+                logger.info("Appending reaction has successed.")
             except BaseException:
-                logger.error("Append reaction failed.")
+                logger.error("Appending reaction has failed.")
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
@@ -133,9 +136,9 @@ class Ppoll(commands.Cog):
         if contexts:
             try:
                 await self._renew_reaction(*contexts, is_remove=True)
-                logger.info("Removal reaction successed.")
+                logger.info("Removing reaction has successed.")
             except BaseException:
-                logger.error("Removal reaction failed.")
+                logger.error("Removing reaction has failed.")
 
     def _get_limit(self, msg):
         if re.match(RE_LIMIT, msg):
