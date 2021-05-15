@@ -1,7 +1,7 @@
 # Summary
 
 The discord bot contains few extentions.
-* `poll` extension: poll tool like to the [Simple Poll](https://discord.bots.gg/bots/324631108731928587).
+* `ppoll` extension: poll tool like to the [Simple Poll](https://discord.bots.gg/bots/324631108731928587).
 * `cron` extension: automated command runner with cron like schedule format.
 
 
@@ -14,16 +14,16 @@ The discord bot contains few extentions.
     /ext unload <COG>
 
   COG:
-    "poll" - Simple Poll like polling extension
+    "ppoll" - Simple Poll like polling extension
     "cron" - Cron like scheduling extension
   ```
-* `/help poll`
+* [`/help poll`](https://github.com/coleyon/discord-partypoll/wiki/poll)
   ```
   Synopsis:
     /ppoll each <TITLE> <[[LIMIT_OF_THE_QUESTION]]QUESTION_1> [<[[LIMIT_OF_THE_QUESTION]]QUESTION_1>]
     /ppoll total <TITLE> <LIMIT_OF_QUESTIONS> <QUESTION_1> [<QUESTION_10>]
   ```
-* `/help cron`
+* [`/help cron`](https://github.com/coleyon/discord-partypoll/wiki/cron)
   ```
   Synopsis:
     /cron add <SCHEDULE_NAME> <SCHEDULE> <COMMAND> - add a schedule.

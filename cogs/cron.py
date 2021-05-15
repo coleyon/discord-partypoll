@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 import re
@@ -13,84 +12,15 @@ from discord import Activity, ActivityType, File
 from discord.ext import commands, tasks
 from tabulate import tabulate
 from discord.ext.commands import TextChannelConverter, ChannelNotFound
+from log import get_logger
 
+logger = get_logger("CronCog")
 USERDATA_PATH = os.getenv("USERDATA_PATH", default="userdata.json")
 Schedule = namedtuple(
     "Schedule", ("guild_id", "channel_id", "register_id", "cron", "command")
 )
 CMD_MAX_VISIBLE = 15
 tabulate.WIDE_CHARS_MODE = True
-HELP_TEXT = ["""```[Cron]
-
-クイックスタート:
-    ※基準時を米国東部時間にして、コマンドを登録して、動作モードにする例
-    /cron timezone EST
-    /cron add Schedule-A */1 * * * * /ppoll total "It is TITLE" 5 a b c
-    /cron enable
-
-    ※登録したコマンドをファイルに保管してから削除し、停止モードにする例
-    /cron get
-    /cron del Schedule-A
-    /cron disable
-
-コマンド(<> は実際には入力しません):
-    /cron add <SCHEDULE_NAME> <SCHEDULE> <COMMAND> - スケジュールを登録する
-    /cron del <SCHEDULE_NAME> - スケジュールを削除する
-    /cron show - スケジュールの一覧を見る
-    /cron check - スケジュールの正しさチェックする
-    /cron get - スケジュールをjson形式のファイルに書き出してダウンロード可能にする
-    /cron load - json形式のファイルをアップロードしてスケジュールをロードさせる
-    /cron timezone - 今のタイムゾーン設定を見る
-    /cron timezone <TZ> - タイムゾーンを設定する（どこの国の時間で動くか）
-    /cron [help] - このヘルプを表示する
-    /cron enable - 動作モードにする（スケジュールが実行されます）
-    /cron disable - 停止モードにする（スケジュールが実行されません）
-    /cron set schedule <SCHEDULE_NAME> <SCHEDULE> - 対象スケジュールを変更する
-    /cron set channel <SCHEDULE_NAME> - 対象スケジュールの実行先チャンネルをこのコマンドを打ったチャンネルに変更する
-```""", """```
-SCHEDULE_NAME:
-    スケジュール名（任意の名前）
-
-SCHEDULE:
-    * * * * *
-    | | | | |
-    | | | | |
-    | | | | +---- 曜日 (0-6 または mon,tue,wed,thu,fri,sat,sun)
-    | | | +------ 月 (1-12)
-    | | +-------- 日 (1-31)
-    | +---------- 時 (0-23)
-    +------------ 分 (0-59)
-
-    SCHEDULEに指定できる値
-    --------------------
-    *     : 全ての値で動作する（分に指定すると毎分の意）
-    */a   : 毎 a で動作する（月に指定すると毎 a 月の意）
-    a-b   : a から b の間で動作する（時に指定すると a ～ b 時の意）
-    a-b/c : a から b にかけて毎 c に動作する（時に 9-17/2 と指定すると、9～17時にかけて2時間毎の意）
-    x,y,z : x と y と z に動作する（月に 4,10 と指定すると、4月と10月の意）
-
-    具体例
-    -----
-    * * * * *        : 毎分
-    */2 * * * *      : 2分毎
-    59 * * * sun     : 日曜日の毎時59分
-    0 14,21 * * *    : 毎日 14:00 と 21:00
-    40-50 3 25 12 *  : 12/25 3:40～3:50 にかけて毎分
-
-COMMAND:
-    <SCHEDULE> で指定したタイミングに実行される Discordのコマンド。
-    例: /ppoll total イベントだよ! 5 "花見" "クリスマス"
-
-    拡張
-    ---
-    コマンド実行時から見てn日後となる日付を、コマンドの内容に差し込む機能です。
-    例えば、毎週月曜～火曜に開催されるイベントの募集を出すコマンドを、
-    前の週の金曜日に定時実行させたい場合などに使えます。
-    この例で言えば、COMMAND部を以下のように指定できます。
-    /ppoll total "定例イベント {{3.days}}～{{4.days}}" 5 "参加" "不参加"
-    すると、10/1に動くコマンドは以下のようになります。
-    /ppoll total "定例イベント 10/4～10/5" 5 "参加" "不参加"
-```"""]
 
 
 class Cron(commands.Cog):
@@ -112,13 +42,12 @@ class Cron(commands.Cog):
         await self.bot.change_presence(
             activity=Activity(type=ActivityType.unknown, name=""), status=None
         )
-        print("{name} Extension Enabled.".format(name=self.__cog_name__))
+        logger.info("{name} Extension Enabled.".format(name=self.__cog_name__))
 
     @commands.group()
     async def cron(self, ctx):
         if ctx.invoked_subcommand is None:
-            for helpmsg in HELP_TEXT:
-                await ctx.send(helpmsg)
+            await ctx.send(":bulb: cron コマンドのマニュアルです。", file=File("helpfiles/cron.md"))
 
     @tasks.loop(minutes=1.0, reconnect=True)
     async def tick(self):
@@ -128,9 +57,12 @@ class Cron(commands.Cog):
                 cmd = v["command"]
                 ch = self.bot.get_channel(v["channel_id"])
                 await ch.send(f"{cmd}")
+                logger.debug(f"Runned `{cmd}`.")
+        presence_type = ActivityType.listening
         await self.bot.change_presence(
-            activity=Activity(type=ActivityType.listening, name="Cron"), status=None
+            activity=Activity(type=presence_type, name="Cron"), status=None
         )
+        logger.debug("tick")
 
     def IC(self, n):
         offset = re.sub(r"\{\{(\d+)\.days\}\}", r"\1", n)
@@ -148,8 +80,8 @@ class Cron(commands.Cog):
                 if isinstance(cmd, commands.core.Command):
                     break
             return [cmd, options]
-        except BaseException:
-            return None
+        except BaseException as e:
+            logger.error(f"Sub command digging failed, {e}.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -177,6 +109,7 @@ class Cron(commands.Cog):
             activity=Activity(type=ActivityType.unknown, name=""), status=None
         )
         await ctx.channel.send(":white_check_mark: 自動実行を無効にしました。")
+        logger.info("Cron disabled manually.")
 
     @cron.command(name="timezone")
     async def set_timezone(self, ctx, tz=None):
@@ -191,6 +124,7 @@ class Cron(commands.Cog):
                 )
         else:
             await ctx.send(f":bulb: 今のタイムゾーンは {self.timezone} です。")
+            logger.info(f"Current timezone setting changed to {self.timezone}")
 
     @cron.command(name="enable")
     async def enable_cron(self, ctx):
@@ -200,54 +134,64 @@ class Cron(commands.Cog):
         )
         self.tick.start()
         await ctx.channel.send(":white_check_mark: 自動実行を有効にしました。")
+        logger.info("Cron enabled manually.")
 
     @cron.command(name="show")
     async def show_schedule(self, ctx, schedule_name=None):
-        if schedule_name:
-            # detail mode
-            detail = self.userdata[schedule_name]["command"]
-            await ctx.channel.send(f":bulb: スケジュール `{schedule_name}` によって実行されるコマンドは...\n`{detail}`\nです。")
-        else:
-            # summary mode
-            headers = ["名前", "分", "時", "日", "月", "曜日", "コマンド"]
-            table = []
-            for k, v in self.userdata.items():
-                crontab = v["schedule"].split(" ")
-                shoten_cmd = "{c}...".format(c=v["command"][:CMD_MAX_VISIBLE]) if len(v["command"]) > CMD_MAX_VISIBLE else v["command"]
-                table.append([k, *crontab, shoten_cmd])
-            formatted_description = tabulate(table, headers, tablefmt="simple")
-            await ctx.channel.send(
-                f":bulb: {len(self.userdata)} 件のスケジュールが登録されています\n```{formatted_description}```"
-            )
+        try:
+            if schedule_name:
+                # detail mode
+                detail = self.userdata[schedule_name]["command"]
+                await ctx.channel.send(f":bulb: スケジュール `{schedule_name}` によって実行されるコマンドは...\n`{detail}`\nです。")
+            else:
+                # summary mode
+                headers = ["名前", "分", "時", "日", "月", "曜日", "コマンド"]
+                table = []
+                for k, v in self.userdata.items():
+                    crontab = v["schedule"].split(" ")
+                    shoten_cmd = "{c}...".format(c=v["command"][:CMD_MAX_VISIBLE]) if len(v["command"]) > CMD_MAX_VISIBLE else v["command"]
+                    table.append([k, *crontab, shoten_cmd])
+                formatted_description = tabulate(table, headers, tablefmt="simple")
+                await ctx.channel.send(
+                    f":bulb: {len(self.userdata)} 件のスケジュールが登録されています\n```{formatted_description}```"
+                )
+        except BaseException as e:
+            logger.error(f"Showing schedule command failed, {e}.")
 
     @cron.command(name="del")
     async def delete_schedule(self, ctx, name):
-        self.userdata.pop(name)
-        await self._save_userdata()
-        await ctx.send(f":white_check_mark: スケジュール `{name}` を除去しました。")
+        try:
+            self.userdata.pop(name)
+            await self._save_userdata()
+            await ctx.send(f":white_check_mark: スケジュール `{name}` を除去しました。")
+        except BaseException as e:
+            logger.error(f"Deleting schedule command failed, {e}.")
 
     @cron.command(name="check")
     async def check_schedule(self, ctx):
-        current = self._now()
-        table = []
-        for k, v in self.userdata.items():
-            if ctx.guild.id != v["server_id"]:
-                continue
-            try:
-                run_at = self._strftime(croniter(v["schedule"], current).get_next(dt))
-            except CroniterBadCronError:
-                run_at = "無し"
-            run_on = self.bot.get_channel(v["channel_id"])
-            if not run_on:
-                run_on = "無し"
-            author = await ctx.guild.fetch_member(v["author"])
-            author_name = "不明"
-            if author:
-                author_name = author.nick
-            table.append([run_at, run_on, k, author_name])
+        try:
+            current = self._now()
+            table = []
+            for k, v in self.userdata.items():
+                if ctx.guild.id != v["server_id"]:
+                    continue
+                try:
+                    run_at = self._strftime(croniter(v["schedule"], current).get_next(dt))
+                except CroniterBadCronError:
+                    run_at = "無し"
+                run_on = self.bot.get_channel(v["channel_id"])
+                if not run_on:
+                    run_on = "無し"
+                author = await ctx.guild.fetch_member(v["author"])
+                author_name = "不明"
+                if author:
+                    author_name = author.nick
+                table.append([run_at, run_on, k, author_name])
 
-        formatted_table = tabulate(table, ["次回実行日時", "実行先チャンネル", "スケジュール名", "登録した人"], tablefmt="simple")
-        await ctx.send(f":bulb: 直近の実行タイミングは次の通りです。\n```{formatted_table}```")
+            formatted_table = tabulate(table, ["次回実行日時", "実行先チャンネル", "スケジュール名", "登録した人"], tablefmt="simple")
+            await ctx.send(f":bulb: 直近の実行タイミングは次の通りです。\n```{formatted_table}```")
+        except BaseException as e:
+            logger.error(f"Checking schedule command failed, {e}.")
 
     @cron.group(name="set")
     async def set_subcmd(self, ctx):
@@ -272,8 +216,10 @@ class Cron(commands.Cog):
             self.userdata[schedule_name]["channel_id"] = channel_id
             await self._save_userdata()
             await ctx.send(f":white_check_mark: `{schedule_name}` の実行先チャンネルを `{channel_name}` に変更しました。")
+            logger.debug(f"{schedule_name} schedule running dest channel changed to {channel_name}.")
         else:
             await ctx.send(f":x: スケジュール `{schedule_name}` がありません。")
+            logger.debug("Schedule running dest channel changing has failed.")
 
     @set_subcmd.command(name="schedule")
     async def set_schedule(self, ctx, schedule_name, m, h, dom, mon, dow):
@@ -297,6 +243,7 @@ class Cron(commands.Cog):
         else:
             if not self._dig(list(cmd)):
                 await ctx.send(":x: 他Botのコマンドまたは正しくないコマンドは定時実行ができないので登録しませんでした。")
+                logger.debug("Specified command could not scheduled.")
                 return
             escaped_cmds = " ".join((f'"{i}"' if " " in i else i for i in cmd))
             self.userdata[name] = {
@@ -307,6 +254,7 @@ class Cron(commands.Cog):
                 "schedule": crontab,
             }
             await self._save_userdata()
+            logger.debug("Specified command scheduled successfully.")
         next_run = self._strftime(croniter(crontab, self._now()).get_next(dt))
         await ctx.send(
             f":white_check_mark: スケジュール `{name}` を追加しました。\n"
@@ -320,8 +268,10 @@ class Cron(commands.Cog):
             await ctx.message.attachments[0].save(fp=USERDATA_PATH)
             await self._load_userdata()
             await ctx.send(":white_check_mark: スケジュールをアップロードしました。")
-        except BaseException:
+            logger.debug(f"Uploaded file saved to {USERDATA_PATH}.")
+        except BaseException as e:
             await ctx.send(":x: スケジュールをアップロードできませんでした。")
+            logger.debug(f"Could not uploaded file saved to {USERDATA_PATH}, reason: {e}.")
 
     @cron.command(name="get")
     async def get_userdata(self, ctx):
@@ -330,21 +280,26 @@ class Cron(commands.Cog):
     async def _save_userdata(self):
         async with aiofiles.open(USERDATA_PATH, mode="w", encoding="utf-8") as afp:
             await afp.write(json.dumps(self.userdata, sort_keys=True, indent=4))
+        logger.debug(f"User Data {USERDATA_PATH} saved.")
 
     async def _load_userdata(self):
         if os.path.exists(USERDATA_PATH) and os.path.isfile(USERDATA_PATH):
             async with aiofiles.open(USERDATA_PATH, mode="r", encoding="utf-8") as afp:
                 self.userdata = json.loads(await afp.read())
+            logger.debug(f"User Data {USERDATA_PATH} loaded.")
         else:
             async with aiofiles.open(USERDATA_PATH, mode="w", encoding="utf-8") as afp:
                 self.userdata = {}
                 json.dump(self.userdata, afp)
+            logger.debug(f"User Data {USERDATA_PATH} generated.")
 
     def cog_unload(self):
         self.tick.cancel()
+        presence_type = ActivityType.unknown
         self.bot.change_presence(
-            activity=Activity(type=ActivityType.unknown, name=""), status=None
+            activity=Activity(type=presence_type, name=""), status=None
         )
+        logger.debug(f"Presense Changed to {presence_type}.")
 
 
 def setup(bot):

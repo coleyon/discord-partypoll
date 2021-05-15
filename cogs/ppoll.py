@@ -1,11 +1,13 @@
+from logging import log
 import os
 import discord
 from discord.ext import commands
 from discord.utils import get
-from discord import Embed
+from discord import File
 import re
+from log import get_logger
 
-
+logger = get_logger("PollCog")
 RE_LIMIT = r"^\[(\d+)\].+$"
 ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
 EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
@@ -14,48 +16,22 @@ SEP = ","
 EACH_POLL = "[質問ごとの人数制限]"
 TOTAL_POLL = "[質問全体での人数制限]"
 COLORS = {EACH_POLL: discord.Colour.magenta(), TOTAL_POLL: discord.Colour.green()}
-HELP_TEXT = """```[Party Poll]
-
-クイックスタート:
-  /ppoll each それぞれ参加人数が違うイベント [5]お花見 [3]BBQ 人数制限なし鍋パー
-  /ppoll total 10名分の予算がある3種のイベント 10 お花見 BBQ 鍋パー
-
-コマンド(<> は実際には入力しません):
-  /ppoll each <TITLE> <[EACH_LIMIT_n]QUESTION_n> - アンケートを出す（質問毎に回答数制限を指定可）
-  /ppoll total <TITLE> <TOTAL_LIMIT> <QUESTION_n> - アンケートを出す（質問全体に回答数制限を指定可）
-
-TITLE:
-    Pollのタイトル
-
-EACH_LIMIT_n:
-    個々の質問に回答できる最大の人数。省略すると無制限。
-
-TOTAL_LIMIT:
-    全ての質問に回答できる最大の人数。省略できない。
-
-QUESTION_n:
-    質問文。最大10個まで指定可能。
-```"""
 
 
-class Poll(commands.Cog):
-    """"""
+class Ppoll(commands.Cog):
+    """Party Poll"""
 
     def __init__(self, bot):
         self.bot = bot
 
-    async def cog_command_error(self, ctx, error):
-        if not ctx.author.bot:
-            await ctx.channel.send(HELP_TEXT)
-
     @commands.group(name="ppoll")
     async def poll(self, ctx):
         if ctx.invoked_subcommand is None:
-            await ctx.send(HELP_TEXT)
+            await ctx.send(":bulb: ppoll コマンドのマニュアルです。", file=File("helpfiles/ppoll.md"))
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("{name} Extension Enabled.".format(name=self.__cog_name__))
+        logger.info("{name} Extension Enabled.".format(name=self.__cog_name__))
 
     async def _renew_reaction(self, reaction, user, is_remove=False):
         old_embed = {
@@ -145,13 +121,21 @@ class Poll(commands.Cog):
     async def on_raw_reaction_add(self, payload):
         contexts = await self._get_reaction_ctx(payload)
         if contexts:
-            await self._renew_reaction(*contexts)
+            try:
+                await self._renew_reaction(*contexts)
+                logger.info("Append reaction successed.")
+            except BaseException:
+                logger.error("Append reaction failed.")
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         contexts = await self._get_reaction_ctx(payload)
         if contexts:
-            await self._renew_reaction(*contexts, is_remove=True)
+            try:
+                await self._renew_reaction(*contexts, is_remove=True)
+                logger.info("Removal reaction successed.")
+            except BaseException:
+                logger.error("Removal reaction failed.")
 
     def _get_limit(self, msg):
         if re.match(RE_LIMIT, msg):
@@ -171,13 +155,14 @@ class Poll(commands.Cog):
     @poll.command(name="help")
     async def help_text(self, ctx):
         if not ctx.author.bot:
-            await ctx.channel.send(HELP_TEXT)
+            await ctx.channel.send(":bulb: ppoll コマンドのマニュアルです。", file=File("helpfiles/ppoll.md"))
 
     @poll.command(name="total")
     async def make_total_poll(self, ctx, title, limit, *args):
         """Total Poll"""
         if len(args) > len(EMOJIS):
             await ctx.channel.send("指定できる選択肢は{n}個までです。".format(n=len(EMOJIS)))
+            logger.info(f"Total poll topic creation by {ctx.message.author.nick} has failed.")
             return
         headers = ["({cur}/{lim})".format(cur=0, lim=limit)]
         contents = list(
@@ -191,12 +176,14 @@ class Poll(commands.Cog):
         message = await ctx.channel.send(f"{title_text}\n{content_text}")
         for num, _ in enumerate(args):
             await message.add_reaction(EMOJIS[num])
+        logger.info(f"Total poll topic created. msgid={message.id}")
 
     @poll.command(name="each")
     async def make_each_poll(self, ctx, title, *args):
         """Each Poll"""
         if len(args) > len(EMOJIS):
             await ctx.channel.send("指定できる選択肢は{n}個までです。".format(n=len(EMOJIS)))
+            logger.info(f"Each poll topic creation by {ctx.message.author.nick} has failed.")
             return
         headers = ["({cur}/{lim})".format(cur=0, lim=self._get_total_limit(args))]
         contents = list(
@@ -215,7 +202,12 @@ class Poll(commands.Cog):
         message = await ctx.channel.send(f"{title_text}\n{content_text}")
         for num, _ in enumerate(args):
             await message.add_reaction(EMOJIS[num])
+        logger.info(f"Each poll topic created. msgid={message.id}")
+
+    async def cog_command_error(self, ctx, error):
+        if not ctx.author.bot:
+            logger.warn(f"Cog command something wrong, error: {error}")
 
 
 def setup(bot):
-    bot.add_cog(Poll(bot))
+    bot.add_cog(Ppoll(bot))

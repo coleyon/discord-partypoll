@@ -12,6 +12,7 @@ WORKDIR ${APPDIR}
 COPY . .
 
 RUN apt-get update
+RUN apt-get install -y libffi-dev
 RUN pip install --upgrade pip
 RUN pip3 install --upgrade pip \
     && pip3 install --upgrade setuptools \
