@@ -1,5 +1,6 @@
 FROM python:3.8-slim
 
+ENV DEBIAN_FRONTEND noninteractive
 ENV TZ Asia/Tokyo
 ENV APPDIR /app
 ENV PYTHONPATH ${APPDIR}
@@ -11,7 +12,7 @@ RUN mkdir -p ${APPDIR}
 WORKDIR ${APPDIR}
 COPY . .
 
-RUN apt-get update
+RUN apt-get update && apt-get install -y apt-utils
 RUN apt-get install -y libffi-dev
 RUN pip install --upgrade pip
 RUN pip3 install --upgrade pip \
