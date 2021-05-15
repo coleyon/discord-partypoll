@@ -169,29 +169,26 @@ class Cron(commands.Cog):
 
     @cron.command(name="check")
     async def check_schedule(self, ctx):
-        try:
-            current = self._now()
-            table = []
-            for k, v in self.userdata.items():
-                if ctx.guild.id != v["server_id"]:
-                    continue
-                try:
-                    run_at = self._strftime(croniter(v["schedule"], current).get_next(dt))
-                except CroniterBadCronError:
-                    run_at = "無し"
-                run_on = self.bot.get_channel(v["channel_id"])
-                if not run_on:
-                    run_on = "無し"
-                author = await ctx.guild.fetch_member(v["author"])
-                author_name = "不明"
-                if author:
-                    author_name = author.nick
-                table.append([run_at, run_on, k, author_name])
+        current = self._now()
+        table = []
+        for k, v in self.userdata.items():
+            if ctx.guild.id != v["server_id"]:
+                continue
+            try:
+                run_at = self._strftime(croniter(v["schedule"], current).get_next(dt))
+            except CroniterBadCronError:
+                run_at = "無し"
+            run_on = self.bot.get_channel(v["channel_id"])
+            if not run_on:
+                run_on = "無し"
+            author = await ctx.guild.fetch_member(v["author"])
+            author_name = "不明"
+            if author:
+                author_name = author.nick
+            table.append([run_at, run_on, k, author_name])
 
-            formatted_table = tabulate(table, ["次回実行日時", "実行先チャンネル", "スケジュール名", "登録した人"], tablefmt="simple")
-            await ctx.send(f":bulb: 直近の実行タイミングは次の通りです。\n```{formatted_table}```")
-        except BaseException as e:
-            logger.error(f"Checking schedule command failed, {e}.")
+        formatted_table = tabulate(table, ["次回実行日時", "実行先チャンネル", "スケジュール名", "登録した人"], tablefmt="simple")
+        await ctx.send(f":bulb: 直近の実行タイミングは次の通りです。\n```{formatted_table}```")
 
     @cron.group(name="set")
     async def set_subcmd(self, ctx):
