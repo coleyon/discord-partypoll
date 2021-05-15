@@ -19,7 +19,7 @@ docutils = "*"
 pyparsing = "*"
 
 [packages]
-"discord.py" = "*"
+"discord.py" = {extras = ["voice"], version = "*"}
 emoji = "*"
 croniter = "*"
 hashids = "*"
@@ -29,6 +29,7 @@ tabulate = {extras = ["widechars"],version = "*"}
 python-dateutil = "*"
 oauth2client = "*"
 google-cloud-language = "*"
+aiohttp = "==3.7.4.post0"
 
 [requires]
 python_version = "3.8"
