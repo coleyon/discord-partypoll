@@ -25,10 +25,10 @@ async def on_ready():
 
 @bot.command(name="ext")
 @commands.has_permissions(manage_guild=True)
-async def ext(ctx, method, ext_name):
+async def ext(ctx, method, ext_name: str):
     if method == "load":
         bot.load_extension(f"cogs.{ext_name}")
-        await ctx.channel.send("{ext_name} をロードしました")
+        await ctx.channel.send(f"{ext_name} をロードしました")
         logger.info(f"Cog {ext_name} loaded.")
     if method == "unload":
         bot.unload_extension(f"cogs.{ext_name}")
@@ -38,4 +38,5 @@ async def ext(ctx, method, ext_name):
 
 bot.load_extension("cogs.ppoll")
 bot.load_extension("cogs.cron")
+bot.load_extension("cogs.profile")
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))

@@ -1,8 +1,5 @@
-from logging import log
-import os
 import discord
 from discord.ext import commands
-from discord.utils import get
 from discord import File
 import re
 from log import get_logger
