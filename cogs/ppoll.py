@@ -9,7 +9,7 @@ RE_LIMIT = r"^\[(\d+)\].+$"
 ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
 EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
 RE_EMBED_LINE = r"(^.+\()(\d+)(/)([\d|-]+)(\).+\()(.*)(\)$)"
-SEP = {",": " ", "(":"[", ")":"]"}
+SEP = {",": "", "(": "<", ")": ">"}
 EACH_POLL = "[質問ごとの人数制限]"
 TOTAL_POLL = "[質問全体での人数制限]"
 COLORS = {EACH_POLL: discord.Colour.magenta(), TOTAL_POLL: discord.Colour.green()}
@@ -167,12 +167,12 @@ class Ppoll(commands.Cog):
         headers = ["({cur}/{lim})".format(cur=0, lim=limit)]
         contents = list(
             {
-                num: "{e} ({cur}/-) {m} ()".format(e=EMOJIS[num], cur=0, m=msg)
+                num: "{e} ({cur}/-) {m} ()".format(e=EMOJIS[num], cur=0, m=msg.translate(str.maketrans(SEP)))
                 for num, msg in enumerate(args)
             }.values()
         )
         title_text = "\n".join([title, TOTAL_POLL])
-        content_text = "\n".join([*headers, *contents]).translate(str.maketrans(SEP))
+        content_text = "\n".join([*headers, *contents])
         message = await ctx.channel.send(f"{title_text}\n{content_text}")
         for num, _ in enumerate(args):
             await message.add_reaction(EMOJIS[num])
@@ -191,14 +191,14 @@ class Ppoll(commands.Cog):
                 num: "{e} ({cur}/{lim}) {m} ()".format(
                     e=EMOJIS[num],
                     cur=0,
-                    lim=self._get_limit(msg),
-                    m=re.sub(r"^\[\d+\]", "", msg),
+                    lim=self._get_limit(msg.translate(str.maketrans(SEP))),
+                    m=re.sub(r"^\[\d+\]", "", msg.translate(str.maketrans(SEP))),
                 )
                 for num, msg in enumerate(args)
             }.values()
         )
         title_text = "\n".join([title, EACH_POLL])
-        content_text = "\n".join([*headers, *contents]).translate(str.maketrans(SEP))
+        content_text = "\n".join([*headers, *contents])
         message = await ctx.channel.send(f"{title_text}\n{content_text}")
         for num, _ in enumerate(args):
             await message.add_reaction(EMOJIS[num])

@@ -38,5 +38,5 @@ async def ext(ctx, method, ext_name: str):
 
 bot.load_extension("cogs.ppoll")
 bot.load_extension("cogs.cron")
-bot.load_extension("cogs.profile")
+# bot.load_extension("cogs.profile")
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
