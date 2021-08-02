@@ -9,7 +9,7 @@ RE_LIMIT = r"^\[(\d+)\].+$"
 ORG_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
 EMOJIS = {k: v for k, v in zip(range(0, len(ORG_EMOJIS)), ORG_EMOJIS)}
 RE_EMBED_LINE = r"(^.+\()(\d+)(/)([\d|-]+)(\).+\()(.*)(\)$)"
-SEP = ","
+SEP = {",": " ", "(":"[", ")":"]"}
 EACH_POLL = "[質問ごとの人数制限]"
 TOTAL_POLL = "[質問全体での人数制限]"
 COLORS = {EACH_POLL: discord.Colour.magenta(), TOTAL_POLL: discord.Colour.green()}
@@ -31,7 +31,7 @@ class Ppoll(commands.Cog):
         logger.info("{name} Extension Enabled.".format(name=self.__cog_name__))
 
     async def _renew_reaction(self, reaction, user, is_remove=False):
-        reactioner = user.display_name.replace(SEP, "")  # remove comma from the name
+        reactioner = user.display_name.translate(str.maketrans(SEP))
 
         old_embed = {
             "title": reaction.message.content.split('\n')[:3],
@@ -172,7 +172,7 @@ class Ppoll(commands.Cog):
             }.values()
         )
         title_text = "\n".join([title, TOTAL_POLL])
-        content_text = "\n".join([*headers, *contents])
+        content_text = "\n".join([*headers, *contents]).translate(str.maketrans(SEP))
         message = await ctx.channel.send(f"{title_text}\n{content_text}")
         for num, _ in enumerate(args):
             await message.add_reaction(EMOJIS[num])
@@ -198,7 +198,7 @@ class Ppoll(commands.Cog):
             }.values()
         )
         title_text = "\n".join([title, EACH_POLL])
-        content_text = "\n".join([*headers, *contents])
+        content_text = "\n".join([*headers, *contents]).translate(str.maketrans(SEP))
         message = await ctx.channel.send(f"{title_text}\n{content_text}")
         for num, _ in enumerate(args):
             await message.add_reaction(EMOJIS[num])
