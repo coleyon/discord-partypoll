@@ -7,7 +7,6 @@ Work in progress, trying change converting this app using rust + [serenity](http
 Creates `.env` file project root.
 
 ```env
-APP_NAME=partypoll
 DISCORD_BOT_TOKEN=your_bot_token_here
 CMD_PREFIX=/
 LOGLEVEL=INFO

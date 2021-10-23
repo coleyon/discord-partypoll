@@ -30,5 +30,6 @@ COPY --from=base ["/${APP_NAME}/target/release/${APP_NAME}", "."]
 ENV DISCORD_BOT_TOKEN ${DISCORD_BOT_TOKEN:-set_your_token}
 ENV CMD_PREFIX ${CMD_PREFIX:-/}
 ENV LOGLEVEL ${LOGLEVEL:-INFO}
+ENV APP_NAME ${APP_NAME:-partypoll}
 
-CMD ["/bin/sh", "-c", "./${APP_NAME}"]
+CMD ["sh", "-c", "./${APP_NAME}"]
