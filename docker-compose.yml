@@ -1,10 +1,11 @@
-version: "3"
+version: "3.8"
 services:
-  discord-bot:
+  bot:
     restart: always
-    build: .
-    environment: 
-      DISCORD_BOT_TOKEN: "yourtoken"
-      LOGLEVEL: "INFO"
-    volumes:
-      - .:/app:rw
+    build: 
+      context: .
+      args:
+        APP_NAME: partypoll
+    env_file:
+      - .env
+    # command: /bin/sh -c "while :; do sleep 10; done"

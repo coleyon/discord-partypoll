@@ -135,5 +135,3 @@ Cargo.lock
 **/*.exe
 
 /.vscode
-
-/config.json

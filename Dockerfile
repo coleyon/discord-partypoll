@@ -1,17 +1,34 @@
-FROM rust:1.31
+#======== BASE image for build time saving.
+FROM rust:1.56 as base
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV TZ Asia/Tokyo
-ENV APPDIR /app
-ENV APP_OPTIONS noopt
-ENV TERM xterm
-ENV DISCORD_BOT_TOKEN ${DISCORD_BOT_TOKEN}
+ARG APP_NAME=${APP_NAME:-partypoll}
 
-RUN mkdir -p ${APPDIR}
-WORKDIR ${APPDIR}
-COPY . .
+# Create empty project
+RUN USER=root cargo new --bin ${APP_NAME}
+WORKDIR /${APP_NAME}
 
-RUN apt-get update && apt-get install -y apt-utils
-RUN cargo install --path .
+# Build dependencies for caching
+# COPY ["./Cargo.lock", "./Cargo.lock"]
+COPY ["./Cargo.toml", "./Cargo.toml"]
+RUN cargo build --release
+RUN rm -fr ./src
 
-CMD ["main"]
+# Build original source tree
+RUN rm ./target/release/deps/${APP_NAME}*
+COPY ["./src", "./src"]
+RUN cargo build --release
+
+#======== APP image
+FROM rust:1.56
+
+# copy cached directory
+ARG APP_NAME=${APP_NAME:-partypoll}
+
+WORKDIR /${APP_NAME}
+COPY --from=base ["/${APP_NAME}/target/release/${APP_NAME}", "."]
+
+ENV DISCORD_BOT_TOKEN ${DISCORD_BOT_TOKEN:-set_your_token}
+ENV CMD_PREFIX ${CMD_PREFIX:-/}
+ENV LOGLEVEL ${LOGLEVEL:-INFO}
+
+CMD ["/bin/sh", "-c", "./${APP_NAME}"]

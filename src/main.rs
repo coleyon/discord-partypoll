@@ -1,5 +1,6 @@
 mod commands;
 
+use std::env;
 use std::{collections::HashSet, fs::File, io::BufReader, usize};
 
 use serenity::async_trait;
@@ -28,9 +29,9 @@ impl EventHandler for Handler {
     }
 }
 
-#[help] // Helpコマンド
-#[individual_command_tip = "これはヘルプコマンド"] // Helpコマンドの説明
-#[strikethrough_commands_tip_in_guild = ""] // 使用できないコマンドについての説明を削除
+#[help]
+#[individual_command_tip = "this is help command description..."]
+#[strikethrough_commands_tip_in_guild = ""]
 async fn my_help(
     ctx: &Context,
     msg: &Message,
@@ -58,33 +59,23 @@ struct Token {
     token: String,
 }
 
-// の形のトークンを取り出す関数
-fn get_token(file_name: &str) -> Result<String> {
-    let file = File::open(file_name).unwrap();
-    let reader = BufReader::new(file);
-    let t: Token = serde_json::from_reader(reader).unwrap();
-    Ok(t.token)
-}
-
 #[tokio::main]
 async fn main() {
-    // Discord Bot Token を設定
-    let token = get_token("config.json").expect("Err トークンが見つかりません");
     // コマンド系の設定
     let framework = StandardFramework::new()
-        // |c| c はラムダ式
-        .configure(|c| c.prefix("~")) // コマンドプレフィックス
+        .configure(|c| c.prefix("/")) // コマンドプレフィックス
         .help(&MY_HELP) // ヘルプコマンドを追加
         .group(&GENERAL_GROUP); // general を追加するには,GENERAL_GROUP とグループ名をすべて大文字にする
 
-    // Botのクライアントを作成
-    let mut client = Client::builder(&token)
+    // Creates bot client
+    let bot_token: String = env::var("DISCORD_BOT_TOKEN").expect("Bot token not found.");
+    let mut client = Client::builder(&bot_token)
         .event_handler(Handler) // 取得するイベント
         .framework(framework) // コマンドを登録
         .await
         .expect("Err creating client"); // エラーハンドリング
 
-    // メインループ。Botを起動
+    // main loop, upstarting the bot.
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }
