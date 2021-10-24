@@ -13,6 +13,7 @@ use serenity::prelude::*;
 use serenity::{
     async_trait,
     client::bridge::gateway::{GatewayIntents, ShardId, ShardManager},
+    collector::{EventCollectorBuilder, MessageCollectorBuilder, ReactionCollectorBuilder},
     framework::standard::{
         buckets::{LimitedFor, RevertBucket},
         help_commands,
@@ -20,6 +21,7 @@ use serenity::{
         Args, CommandGroup, CommandOptions, CommandResult, DispatchError, HelpOptions, Reason,
         StandardFramework,
     },
+    futures::{future::BoxFuture, stream::StreamExt},
     http::Http,
     model::{
         channel::{Channel, Message},
@@ -27,8 +29,11 @@ use serenity::{
         gateway::Ready,
         id::UserId,
         permissions::Permissions,
+        prelude::*,
     },
+    prelude::*,
     utils::{content_safe, ContentSafeOptions},
+    FutureExt,
 };
 use tokio::sync::Mutex;
 use tracing::{debug, info, instrument};
@@ -45,14 +50,24 @@ impl TypeMapKey for CommandCounter {
     type Value = HashMap<String, u64>;
 }
 
-struct Handler;
+#[group("collector")]
+struct Collector;
 
+struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     // Botが起動したときに走る処理
     async fn ready(&self, _: Context, ready: Ready) {
         info!("{} is connected!", ready.user.name);
     }
+
+    async fn reaction_add(&self, _ctx: Context, _add_reaction: Reaction) {
+        info!("{} added.", _add_reaction.emoji);
+    }
+    async fn reaction_remove(&self, _ctx: Context, _removed_reaction: Reaction) {
+        info!("{} removed.", _removed_reaction.emoji);
+    }
+
     // For instrument to work, all parameters must implement Debug.
     //
     // Handler doesn't implement Debug here, so we specify to skip that argument.
@@ -139,7 +154,6 @@ async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) {
     }
 }
 
-use serenity::{futures::future::BoxFuture, FutureExt};
 fn _dispatch_error_no_macro<'fut>(
     ctx: &'fut mut Context,
     msg: &'fut Message,

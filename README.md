@@ -35,5 +35,5 @@ $ cargo run
 
 # Base Code references
 
-https://zenn.dev/t4t5u0/articles/cd731e0293cf224cb4dc
+https://github.com/serenity-rs/serenity/tree/current/examples
 
