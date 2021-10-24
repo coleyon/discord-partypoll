@@ -8,24 +8,24 @@ use serenity::{
 };
 
 #[group]
-#[prefixes("neko", "cat")]
+#[prefixes("reply", "rp")]
 #[description = "A group with commands providing a reply."]
 #[summary = "Replying commands."]
 #[default_command(default)]
-#[commands(default)]
-struct Neko;
+#[commands(default, without_mention)]
+struct Reply;
 
 #[command]
-#[description = "Meow!!"]
+#[description = "Puts reply with mention"]
 async fn default(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.channel_id
-        .say(
-            &ctx.http,
-            format!(
-                "{} meow!, were new bot written in rustlang.",
-                msg.author.mention()
-            ),
-        )
+    msg.reply_mention(&ctx.http, "reply with mention test")
         .await?;
+    Ok(())
+}
+
+#[command]
+#[description = "Puts reply"]
+async fn without_mention(ctx: &Context, msg: &Message) -> CommandResult {
+    msg.reply(&ctx.http, "simple reply test").await?;
     Ok(())
 }
