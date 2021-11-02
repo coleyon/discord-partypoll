@@ -1,5 +1,6 @@
 {
     "token": "bot_token",
     "clientId": "123444444444444444",
-    "guildId": "123444444444444444"
+    "guildId": "123444444444444444",
+    "is_global": false
 }

@@ -16,9 +16,7 @@ module.exports = {
             .setRequired(true)
         )
         .addStringOption(
-          // TBD 1
-          // 入力 1Q1 2Q2 ... を、
-          // Array.of(new Set([1, "Q1"]), new Set([2, "Q2"]), ...) 的にパースさせたい
+          // TBD how2impl original parser
           (option) =>
             option
               .setName("limit")
@@ -44,9 +42,7 @@ module.exports = {
             .setRequired(true)
         )
         .addStringOption(
-          // TBD 2
-          // 入力 Q1 Q2 ... を、
-          // Array.of("Q1", "Q2", ...) 的にパースさせたい
+          // TBD how2impl original parser
           (option) =>
             option
               .setName("question")
