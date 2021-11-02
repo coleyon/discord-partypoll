@@ -1,10 +1,7 @@
-version: "3"
+version: "3.8"
 services:
-  discord-bot:
+  bot:
     restart: always
     build: .
     environment: 
-      DISCORD_BOT_TOKEN: "yourtoken"
-      LOGLEVEL: "INFO"
-    volumes:
-      - .:/app:rw
+      DISCORD_BOT_TOKEN: "discord_bot_token"
