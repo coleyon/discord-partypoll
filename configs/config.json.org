@@ -1,0 +1,4 @@
+{
+  "TOKEN": "bot_token",
+  "PREFIX": "/"
+}

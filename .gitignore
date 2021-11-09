@@ -122,7 +122,7 @@ typings/
 # nuxt.js build output
 .nuxt
 
-# react / gatsby 
+# react / gatsby
 public/
 
 # vuepress build output
@@ -171,4 +171,4 @@ $RECYCLE.BIN/
 
 # /userdata.json
 /sa-key.json
-/config.json
+/configs/*.json
