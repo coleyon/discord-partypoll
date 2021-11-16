@@ -1,18 +1,25 @@
 module.exports.run = async (client, interaction) => {
-  client.on("interactionCreate", async (interaction) => {
-    if (!interaction.isCommand()) return;
+  if (interaction.isCommand()) {
+    await interaction.deferReply({ ephemeral: false }).catch(() => {});
 
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
+    const command = client.slash.get(interaction.commandName);
+    if (!command) return interaction.followUp({ content: "an Erorr" });
+
+    const args = [];
+
+    for (let option of interaction.options.data) {
+      if (option.type === "SUB_COMMAND") {
+        if (option.name) args.push(option.name);
+        option.options?.forEach((x) => {
+          if (x.value) args.push(x.value);
+        });
+      } else if (option.value) args.push(option.value);
+    }
 
     try {
-      await command.execute(interaction);
-    } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        content: "There was an error while executing this command!",
-        ephemeral: true
-      });
+      command.run(client, interaction, args);
+    } catch (e) {
+      interaction.followUp({ content: e.message });
     }
-  });
+  }
 };
