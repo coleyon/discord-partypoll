@@ -10,5 +10,4 @@ branch for learning jslang, py to js conv
 - devenv
   - https://github.com/prettier/eslint-config-prettier
 - example codes
-  - https://github.com/parasop/discord.js-v13-bot.git
-  - https://github.com/eritislami/evobot.git
+  - https://github.com/discordjs/guide/tree/main/code-samples/creating-your-bot

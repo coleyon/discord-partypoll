@@ -1,4 +1,3 @@
-let slash = [];
 const { readdirSync } = require("fs");
 const ascii = require("ascii-table");
 
@@ -7,15 +6,14 @@ const ascii = require("ascii-table");
 // Create a new Ascii table
 let table = new ascii("Slash commands");
 module.exports = (client) => {
-  readdirSync("src/slash-commands").forEach((dir) => {
-    const commands = readdirSync(`src/slash-commands/${dir}/`).filter((file) => file.endsWith(".js"));
+  readdirSync("src/slash").forEach((dir) => {
+    const commands = readdirSync(`src/slash/${dir}/`).filter((file) => file.endsWith(".js"));
 
     for (let file of commands) {
-      let pull = require(`../slash-commands/${dir}/${file}`);
+      let pull = require(`../slash/${dir}/${file}`);
 
-      if (pull.name) {
-        client.slash.set(pull.name, pull);
-        slash.push(pull);
+      if (pull.data.name) {
+        client.commands.set(pull.data.name, pull);
         table.addRow(file, "✅");
       } else {
         table.addRow(file, `❌  -> missing a help.name, or help.name is not a string.`);
@@ -23,12 +21,5 @@ module.exports = (client) => {
       }
     }
   });
-
   console.log(table.toString());
-
-  client.on("ready", async () => {
-    //registering slash comand
-
-    await client.application.commands.set(slash);
-  });
 };
