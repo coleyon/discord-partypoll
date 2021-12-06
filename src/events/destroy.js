@@ -1,5 +1,5 @@
-const { PREFIX } = require("../utils/config");
 module.exports.run = async (client) => {
-    client.user.setActivity(`${PREFIX}help and ${PREFIX}play`, { type: "LISTENING" });
-    console.log(`Ready.`);
+  console.debug("destroy");
+  client.user.setPresence({ activities: [{ name: "Closing...", type: "Playing" }], status: "dnd" });
+  console.log("closing...");
 };

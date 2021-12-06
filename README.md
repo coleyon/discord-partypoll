@@ -11,3 +11,8 @@ branch for learning jslang, py to js conv
   - https://github.com/prettier/eslint-config-prettier
 - example codes
   - https://github.com/discordjs/guide/tree/main/code-samples/creating-your-bot
+
+**src/events**
+
+put js file (i.e. `ready.js`) into this directory, means equals the [ready event](https://discord.js.org/#/docs/main/stable/class/Client?scrollTo=e-ready)
+https://discord.js.org/#/docs/main/stable/class/Client?scrollTo=e-interactionCreate

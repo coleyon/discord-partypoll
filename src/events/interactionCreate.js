@@ -1,4 +1,5 @@
 module.exports.run = async (client, interaction) => {
+  console.debug("interactionCreate");
   if (!interaction.isCommand()) {
     return;
   }
