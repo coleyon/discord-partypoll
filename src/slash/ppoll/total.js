@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 
 /**
- * @link {https://github.com/coleyon/discord-partypoll/blob/67d296fa23ed9e297511f46c71f4b96689929495/cogs/ppoll.py#L163} interaction
+ * @link https://github.com/coleyon/discord-partypoll/blob/67d296fa23ed9e297511f46c71f4b96689929495/cogs/ppoll.py#L163
  */
 async function makeTotalPoll(interaction) {
   const title = interaction.options.getString("title");
@@ -18,7 +18,7 @@ async function makeTotalPoll(interaction) {
 async function makeEachPoll(interaction) {}
 
 /**
- * /ppoll total 10名分の予算がある3種のイベント 10 お花見 BBQ 鍋パー
+ * @link https://github.com/coleyon/discord-partypoll/blob/67d296fa23ed9e297511f46c71f4b96689929495/cogs/ppoll.py#L182
  */
 module.exports = {
   data: new SlashCommandBuilder()
