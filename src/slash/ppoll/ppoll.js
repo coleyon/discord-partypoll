@@ -4,6 +4,7 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
  * @link https://github.com/coleyon/discord-partypoll/blob/67d296fa23ed9e297511f46c71f4b96689929495/cogs/ppoll.py#L163
  */
 async function makeTotalPoll(interaction) {
+  console.debug("entire makeTotalPoll");
   const title = interaction.options.getString("title");
   const limit = interaction.options.getInteger("limit");
   const choices = [];
@@ -12,14 +13,16 @@ async function makeTotalPoll(interaction) {
       choices.push(option.value);
     }
   }
-  console.log("");
+  console.log("OK");
 }
-
-async function makeEachPoll(interaction) {}
 
 /**
  * @link https://github.com/coleyon/discord-partypoll/blob/67d296fa23ed9e297511f46c71f4b96689929495/cogs/ppoll.py#L182
  */
+async function makeEachPoll(interaction) {
+  console.debug("entire makeEachPoll");
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("ppoll")
@@ -68,13 +71,16 @@ module.exports = {
         .addStringOption((option) => option.setName("choice9").setDescription("text"))
     ),
   async execute(interaction) {
+    console.debug("entire execute");
     const subCmdType = interaction.options.getSubcommand();
     if (subCmdType === "total") {
+      // await makeTotalPoll(interaction);
       await makeTotalPoll(interaction);
+      return interaction.reply(`Ppoll Total!`);
     } else if (subCmdType === "each") {
       await makeEachPoll(interaction);
-    } else {
-      return interaction.reply("No option was provided!");
+      return interaction.reply("Ppoll Each!");
     }
+    return interaction.reply("No option was provided!");
   }
 };
