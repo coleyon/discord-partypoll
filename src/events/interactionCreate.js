@@ -10,6 +10,7 @@ module.exports.run = async (client, interaction) => {
   }
 
   try {
+    interaction.channel.sendTyping();
     await command.execute(interaction);
   } catch (e) {
     interaction.followUp({ content: e.message });
