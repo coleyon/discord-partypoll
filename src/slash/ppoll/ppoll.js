@@ -1,3 +1,4 @@
+const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const { SlashCommandBuilder } = require("@discordjs/builders");
 
 /**
@@ -7,12 +8,23 @@ async function makeTotalPoll(interaction) {
   console.debug("entire makeTotalPoll");
   const title = interaction.options.getString("title");
   const limit = interaction.options.getInteger("limit");
-  const choices = [];
+
+  const msgContent = new MessageEmbed()
+    .setColor("#FF5733")
+    .setTitle("Total Poll")
+    .setDescription("description here");
+  const buttons = new MessageActionRow();
+  let cnt = 0;
   for (option of interaction.options._hoistedOptions.slice(2)) {
     if (option.value) {
-      choices.push(option.value);
+      buttons.addComponents(
+        new MessageButton().setCustomId(`primary-${cnt}`).setLabel(option.value).setStyle("SUCCESS")
+      );
     }
+    cnt++;
   }
+
+  await interaction.channel.send({ embeds: [msgContent], components: [buttons] });
   console.log("OK");
 }
 
