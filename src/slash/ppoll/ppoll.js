@@ -9,22 +9,18 @@ async function makeTotalPoll(interaction) {
   const title = interaction.options.getString("title");
   const limit = interaction.options.getInteger("limit");
 
-  const msgContent = new MessageEmbed()
-    .setColor("#FF5733")
-    .setTitle("Total Poll")
-    .setDescription("description here");
+  const embeds = new MessageEmbed().setColor("#FF5733").setTitle("Total Poll").setDescription(title);
   const buttons = new MessageActionRow();
-  let cnt = 0;
   for (option of interaction.options._hoistedOptions.slice(2)) {
     if (option.value) {
       buttons.addComponents(
-        new MessageButton().setCustomId(`primary-${cnt}`).setLabel(option.value).setStyle("SUCCESS")
+        new MessageButton().setCustomId(option.name).setLabel(option.value).setStyle("SUCCESS")
       );
     }
-    cnt++;
+    embeds.addField(option.value, "-", true);
   }
 
-  await interaction.channel.send({ embeds: [msgContent], components: [buttons] });
+  await interaction.channel.send({ embeds: [embeds], components: [buttons] });
   console.log("OK");
 }
 

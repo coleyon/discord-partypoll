@@ -1,19 +1,22 @@
 const { MessageActionRow } = require("discord.js");
 
 async function buttonInteraction(client, interaction) {
-  const customId = interaction.customID;
-  const channel = interaction.channel;
+  // const customId = interaction.customID;
+  // const channel = interaction.channel;
   const reactioner = interaction.user;
-  const component = interaction.component;
+  // const component = interaction.component;
 
+  const orgComponents = interaction.message.components[0];
+  const currentComponent = orgComponents.components.filter((c) => c.customId === interaction.customId);
+  const orgFields = interaction.message.embeds[0].fields;
+  const currentField = orgFields.filter((f) => f.name === interaction.component.label);
+
+  // TODO ボタンの状態とFieldの内容を
   await interaction.component.setStyle("DANGER");
   await interaction.editReply({
-    components: [new MessageActionRow().addComponents(interaction.component)]
+    components: [new MessageActionRow().addComponents(interaction.component)],
+    embeds: []
   });
-  // await interaction.Update({
-  //   components: [new MessageActionRow().addComponents(interaction.component)]
-  // });
-
   console.debug("button pushed.");
 }
 
@@ -32,7 +35,6 @@ module.exports.run = async (client, interaction) => {
     }
 
     try {
-      interaction.channel.sendTyping();
       await command.execute(interaction);
     } catch (e) {
       interaction.followUp({ content: e.message });
