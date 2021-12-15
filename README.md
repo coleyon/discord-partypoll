@@ -29,3 +29,10 @@ https://discord.js.org/#/docs/main/stable/class/Client?scrollTo=e-interactionCre
 **manipurates user data and file io**
 
 - [Map を活用する](https://scrapbox.io/discordjs-japan/Map%E3%82%92%E6%B4%BB%E7%94%A8%E3%81%99%E3%82%8B)
+
+**Editing message field and button**
+
+- https://discord.js.org/#/docs/main/stable/class/MessageEmbed?scrollTo=spliceFields
+  - [.spliceFields を使う](https://stackoverflow.com/questions/63208763/finding-an-embed-created-by-a-bot-discord-js)
+- https://discord.js.org/#/docs/main/stable/class/MessageActionRow
+  - [.spliceComponents API](https://discord.js.org/#/docs/main/stable/class/MessageActionRow?scrollTo=spliceComponents)

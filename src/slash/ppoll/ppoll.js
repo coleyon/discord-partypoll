@@ -9,15 +9,22 @@ async function makeTotalPoll(interaction) {
   const title = interaction.options.getString("title");
   const limit = interaction.options.getInteger("limit");
 
-  const embeds = new MessageEmbed().setColor("#FF5733").setTitle("Total Poll").setDescription(title);
+  const embeds = new MessageEmbed()
+    .setColor("#FF5733")
+    .setTitle(`[質問全体での人数制限]`)
+    .setDescription(title)
+    .setFooter(`0/${limit}`);
   const buttons = new MessageActionRow();
   for (option of interaction.options._hoistedOptions.slice(2)) {
     if (option.value) {
       buttons.addComponents(
-        new MessageButton().setCustomId(option.name).setLabel(option.value).setStyle("SUCCESS")
+        new MessageButton()
+          .setCustomId(`${interaction.id}_${option.name}`)
+          .setLabel(option.value)
+          .setStyle("SUCCESS")
       );
+      embeds.addField(option.value, "-", true);
     }
-    embeds.addField(option.value, "-", true);
   }
 
   await interaction.channel.send({ embeds: [embeds], components: [buttons] });
@@ -29,6 +36,30 @@ async function makeTotalPoll(interaction) {
  */
 async function makeEachPoll(interaction) {
   console.debug("entire makeEachPoll");
+  console.debug("entire makeTotalPoll");
+  const title = interaction.options.getString("title");
+
+  const embeds = new MessageEmbed().setColor("#FF5733").setTitle(`[質問毎の人数制限]`).setDescription(title);
+  const buttons = new MessageActionRow();
+  const split = (array, n) =>
+    array.reduce((a, c, i) => (i % n == 0 ? [...a, [c]] : [...a.slice(0, -1), [...a[a.length - 1], c]]), []);
+
+  for (optionSet of split(interaction.options._hoistedOptions.slice(1), 2)) {
+    const limit = optionSet[0];
+    const choice = optionSet[1];
+    if (limit.value && choice.value) {
+      buttons.addComponents(
+        new MessageButton()
+          .setCustomId(`${interaction.id}_${choice.name}`)
+          .setLabel(choice.value)
+          .setStyle("SUCCESS")
+      );
+      embeds.addField(`${choice.value}, 0/${limit.value}`, "-", true);
+    }
+  }
+
+  await interaction.channel.send({ embeds: [embeds], components: [buttons] });
+  console.log("OK");
 }
 
 module.exports = {
@@ -82,13 +113,12 @@ module.exports = {
     console.debug("entire execute");
     const subCmdType = interaction.options.getSubcommand();
     if (subCmdType === "total") {
-      // await makeTotalPoll(interaction);
       await makeTotalPoll(interaction);
-      return interaction.reply(`Ppoll Total!`);
+      return await interaction.editReply("Total limited polling.");
     } else if (subCmdType === "each") {
       await makeEachPoll(interaction);
-      return interaction.reply("Ppoll Each!");
+      return await interaction.editReply("Each limited polling.");
     }
-    return interaction.reply("No option was provided!");
+    return await interaction.editReply("入力が不足しています.");
   }
 };
