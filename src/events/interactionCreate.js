@@ -7,15 +7,14 @@ async function buttonInteraction(client, interaction) {
   // const component = interaction.component;
   // const orgComponents = interaction.message.components[0];
   // const currentComponent = orgComponents.components.filter((c) => c.customId === interaction.customId);
-  // const orgFields = interaction.message.embeds[0].fields;
-  // const currentField = orgFields.filter((f) => f.name === interaction.component.label);
+  const orgFields = interaction.message.embeds[0].fields;
+  const currentField = orgFields.filter((f) => f.name === interaction.component.label);
 
-  await interaction.message.edit(Date.now().toString());
-
-  // client.channels.cache
-  //   .get(interaction.channelId)
-  //   .fetchMessage(interaction.message.id)
-  //   .then((msg) => msg.edit("Done!"));
+  const embeds = new MessageEmbed(interaction.message.embeds[0]);
+  const currentCount = parseInt(embeds.footer.text.split("/")[0]);
+  const limitCount = parseInt(embeds.footer.text.split("/")[1]);
+  embeds.footer.text = `${currentCount + 1}/${limitCount}`;
+  await interaction.message.edit({ content: Date.now().toString(), embeds: [embeds] });
 
   // // TODO ボタンの状態とFieldの内容を
   // await interaction.component.setStyle("DANGER");
