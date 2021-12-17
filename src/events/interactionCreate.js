@@ -7,18 +7,11 @@ async function buttonInteraction(client, interaction) {
   // gets common info
   const guild = client.guilds.cache.get(interaction.message.guildId);
   const reactioner = guild.members.cache.get(interaction.user.id);
-  let reactionerNick = reactioner ? reactioner.displayName : null;
+  let reactionerNick = reactioner ? reactioner.displayName : reactioner.name;
   reactionerNick = reactionerNick.replace(",", "，");
-  const orgFields = interaction.message.embeds[0].fields;
-  const currentField = orgFields.filter((f) => f.name === interaction.component.label);
-
-  // check limit
   const embeds = new MessageEmbed(interaction.message.embeds[0]);
   const currentCount = parseInt(embeds.footer.text.split("/")[0]);
   const limitCount = parseInt(embeds.footer.text.split("/")[1]);
-  if (currentCount + 1 > limitCount) {
-    return await interaction.user.send(`${interaction.message.url}\nこちらの募集は定員に達していました。`);
-  }
 
   // check is answered by the user
   let alreadyPressed = false;
@@ -60,6 +53,10 @@ async function buttonInteraction(client, interaction) {
     const diff = orgReactions.length - reactioners.length;
     embeds.footer.text = `${currentCount - diff}/${limitCount}`;
   } else {
+    // check limit
+    if (currentCount + 1 > limitCount) {
+      return await interaction.user.send(`${interaction.message.url}\nこちらの募集は定員に達していました。`);
+    }
     // add user name to field
     let reactioners = [];
     if (embeds.fields[fieldIdx].value === "-") {
