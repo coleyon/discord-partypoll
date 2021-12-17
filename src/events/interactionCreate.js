@@ -45,6 +45,10 @@ async function buttonInteraction(client, interaction) {
 
   if (alreadyPressed) {
     // remove user name from field
+    const orgReactions = embeds.fields[fieldIdx].value.split(",");
+    if (!orgReactions.includes(reactionerNick)) {
+      return await interaction.user.send(`${interaction.message.url}\n同時に複数の質問に回答できません。`);
+    }
     let reactioners = [];
     reactioners = embeds.fields[fieldIdx].value.split(",").filter((e) => e !== reactionerNick);
     if (reactioners.length) {
@@ -53,7 +57,8 @@ async function buttonInteraction(client, interaction) {
       embeds.fields[fieldIdx].value = "-";
     }
     // decrements answer count
-    embeds.footer.text = `${currentCount - 1}/${limitCount}`;
+    const diff = orgReactions.length - reactioners.length;
+    embeds.footer.text = `${currentCount - diff}/${limitCount}`;
   } else {
     // add user name to field
     let reactioners = [];
