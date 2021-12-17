@@ -69,8 +69,7 @@ async function buttonInteraction(client, interaction) {
     // increments answer count
     embeds.footer.text = `${currentCount + 1}/${limitCount}`;
   }
-
-  await interaction.message.edit({ content: `timestamp: ${Date.now().toString()}`, embeds: [embeds] });
+  await interaction.message.edit({ embeds: [embeds] });
   console.debug("button pushed.");
 }
 
@@ -82,17 +81,16 @@ module.exports.run = async (client, interaction) => {
   }
   if (interaction.isCommand()) {
     await interaction.deferReply();
-    // await interaction.deferReply({ ephemeral: false }).catch(() => {});
     const command = client.commands.get(interaction.commandName);
     if (!command) {
-      return interaction.followUp({ content: "Command not found." });
+      return await interaction.editReply({ content: "Command not found.", ephemeral: true });
     }
 
     try {
       await command.execute(interaction);
+      await interaction.editReply({ content: "OK.", ephemeral: true });
     } catch (e) {
-      interaction.followUp({ content: e.message });
+      await interaction.editReply({ content: e.message, ephemeral: true });
     }
   }
-  return;
 };

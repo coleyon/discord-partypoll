@@ -70,55 +70,52 @@ module.exports = {
       subcommand
         .setName("total")
         .setDescription("total poll")
-        .addStringOption((option) => option.setName("title").setDescription("title text").setRequired(true))
-        .addIntegerOption((option) => option.setName("limit").setDescription("limit").setRequired(true))
-        .addStringOption((option) => option.setName("choice0").setDescription("text").setRequired(true))
-        .addStringOption((option) => option.setName("choice1").setDescription("text"))
-        .addStringOption((option) => option.setName("choice2").setDescription("text"))
-        .addStringOption((option) => option.setName("choice3").setDescription("text"))
-        .addStringOption((option) => option.setName("choice4").setDescription("text"))
-        .addStringOption((option) => option.setName("choice5").setDescription("text"))
-        .addStringOption((option) => option.setName("choice6").setDescription("text"))
-        .addStringOption((option) => option.setName("choice7").setDescription("text"))
-        .addStringOption((option) => option.setName("choice8").setDescription("text"))
-        .addStringOption((option) => option.setName("choice9").setDescription("text"))
+        .addStringOption((option) => option.setName("title").setDescription("タイトル").setRequired(true))
+        .addIntegerOption((option) => option.setName("limit").setDescription("回答制限").setRequired(true))
+        .addStringOption((option) => option.setName("choice1").setDescription("回答1").setRequired(true))
+        .addStringOption((option) => option.setName("choice2").setDescription("回答2"))
+        .addStringOption((option) => option.setName("choice3").setDescription("回答3"))
+        .addStringOption((option) => option.setName("choice4").setDescription("回答4"))
+        .addStringOption((option) => option.setName("choice5").setDescription("回答5"))
+        .addStringOption((option) => option.setName("choice6").setDescription("回答6"))
+        .addStringOption((option) => option.setName("choice7").setDescription("回答7"))
+        .addStringOption((option) => option.setName("choice8").setDescription("回答8"))
+        .addStringOption((option) => option.setName("choice9").setDescription("回答9"))
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("each")
         .setDescription("each poll")
-        .addStringOption((option) => option.setName("title").setDescription("title text").setRequired(true))
-        .addIntegerOption((option) => option.setName("limit0").setDescription("limit").setRequired(true))
-        .addStringOption((option) => option.setName("choice0").setDescription("text").setRequired(true))
-        .addIntegerOption((option) => option.setName("limit1").setDescription("limit"))
-        .addStringOption((option) => option.setName("choice1").setDescription("text"))
-        .addIntegerOption((option) => option.setName("limit2").setDescription("limit"))
-        .addStringOption((option) => option.setName("choice2").setDescription("text"))
-        .addIntegerOption((option) => option.setName("limit3").setDescription("limit"))
-        .addStringOption((option) => option.setName("choice3").setDescription("text"))
-        .addIntegerOption((option) => option.setName("limit4").setDescription("limit"))
-        .addStringOption((option) => option.setName("choice4").setDescription("text"))
-        .addIntegerOption((option) => option.setName("limit5").setDescription("limit"))
-        .addStringOption((option) => option.setName("choice5").setDescription("text"))
-        .addIntegerOption((option) => option.setName("limit6").setDescription("limit"))
-        .addStringOption((option) => option.setName("choice6").setDescription("text"))
-        .addIntegerOption((option) => option.setName("limit7").setDescription("limit"))
-        .addStringOption((option) => option.setName("choice7").setDescription("text"))
-        .addIntegerOption((option) => option.setName("limit8").setDescription("limit"))
-        .addStringOption((option) => option.setName("choice8").setDescription("text"))
-        .addIntegerOption((option) => option.setName("limit9").setDescription("limit"))
-        .addStringOption((option) => option.setName("choice9").setDescription("text"))
+        .addStringOption((option) => option.setName("title").setDescription("タイトル").setRequired(true))
+        .addIntegerOption((option) => option.setName("limit1").setDescription("制限1").setRequired(true))
+        .addStringOption((option) => option.setName("choice1").setDescription("回答1").setRequired(true))
+        .addIntegerOption((option) => option.setName("limit2").setDescription("制限2"))
+        .addStringOption((option) => option.setName("choice2").setDescription("回答2"))
+        .addIntegerOption((option) => option.setName("limit3").setDescription("制限3"))
+        .addStringOption((option) => option.setName("choice3").setDescription("回答3"))
+        .addIntegerOption((option) => option.setName("limit4").setDescription("制限4"))
+        .addStringOption((option) => option.setName("choice4").setDescription("回答4"))
+        .addIntegerOption((option) => option.setName("limit5").setDescription("制限5"))
+        .addStringOption((option) => option.setName("choice5").setDescription("回答5"))
+        .addIntegerOption((option) => option.setName("limit6").setDescription("制限6"))
+        .addStringOption((option) => option.setName("choice6").setDescription("回答6"))
+        .addIntegerOption((option) => option.setName("limit7").setDescription("制限7"))
+        .addStringOption((option) => option.setName("choice7").setDescription("回答7"))
+        .addIntegerOption((option) => option.setName("limit8").setDescription("制限8"))
+        .addStringOption((option) => option.setName("choice8").setDescription("回答8"))
+        .addIntegerOption((option) => option.setName("limit9").setDescription("制限9"))
+        .addStringOption((option) => option.setName("choice9").setDescription("回答9"))
     ),
   async execute(interaction) {
     console.debug("entire execute");
     const subCmdType = interaction.options.getSubcommand();
     if (subCmdType === "total") {
       await makeTotalPoll(interaction);
-      return await interaction.editReply("Total limited polling.");
+      // return await interaction.editReply("Total limited polling.");
     } else if (subCmdType === "each") {
       await makeEachPoll(interaction);
-      return await interaction.editReply("Each limited polling.");
+      // return await interaction.editReply("Each limited polling.");
     }
-    return await interaction.editReply("入力が不足しています.");
+    // return await interaction.editReply("入力が不足しています.");
   }
 };
