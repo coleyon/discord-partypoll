@@ -21,7 +21,7 @@ async function totalButtonInteraction(client, interaction) {
     }
   }
   if (currentCount < 1 && alreadyPressed) {
-    console.error("something wrong field value.");
+    console.error(":x: something wrong field value.");
     return;
   }
   // find index of pressed field
@@ -36,7 +36,7 @@ async function totalButtonInteraction(client, interaction) {
     // remove user name from field
     const orgReactions = embeds.fields[fieldIdx].value.split(",");
     if (!orgReactions.includes(reactionerNick)) {
-      return await interaction.user.send(`${interaction.message.url}\n同時に複数の質問に回答できません。`);
+      return await interaction.user.send(`:x:${interaction.message.url}\n同時に複数の回答はできません。`);
     }
     let reactioners = [];
     reactioners = embeds.fields[fieldIdx].value.split(",").filter((e) => e !== reactionerNick);
@@ -51,7 +51,7 @@ async function totalButtonInteraction(client, interaction) {
   } else {
     // check limit
     if (currentCount + 1 > limitCount) {
-      return await interaction.user.send(`${interaction.message.url}\nこちらの募集は定員に達していました。`);
+      return await interaction.user.send(`:x:${interaction.message.url}\n回答数の上限オーバーです。`);
     }
     // add user name to field
     let reactioners = [];
@@ -93,7 +93,7 @@ async function eachButtonInteraction(client, interaction) {
     alreadyPressed = embeds.fields[fieldIdx].value.includes(reactionerNick);
   }
   if (currentCount < 1 && alreadyPressed) {
-    console.error("something wrong field value.");
+    console.error(":x: something wrong field value.");
     return;
   }
   const fieldTitle = embeds.fields[fieldIdx].name.split(",")[0];
@@ -116,7 +116,7 @@ async function eachButtonInteraction(client, interaction) {
     if (currentCount + 1 > limitCount) {
       const fieldTitle = embeds.fields[fieldIdx].name.split(",")[0];
       return await interaction.user.send(
-        `${interaction.message.url}\n質問 \`${fieldTitle}\` は定員に達していました。`
+        `:x:${interaction.message.url}\nアンケート \`${fieldTitle}\` は回答数の上限オーバーです。`
       );
     }
     // add user name to field
@@ -139,10 +139,10 @@ async function buttonInteraction(client, interaction) {
     return;
   }
   const embedTitle = interaction.message.embeds[0].title;
-  if ("[質問全体での人数制限]" === embedTitle) {
+  if ("[アンケート全体での人数制限]" === embedTitle) {
     await totalButtonInteraction(client, interaction);
   }
-  if ("[質問毎の人数制限]" === embedTitle) {
+  if ("[アンケート毎の人数制限]" === embedTitle) {
     await eachButtonInteraction(client, interaction);
   }
   console.debug("button pushed.");
@@ -158,12 +158,12 @@ module.exports.run = async (client, interaction) => {
     await interaction.deferReply();
     const command = client.commands.get(interaction.commandName);
     if (!command) {
-      return await interaction.editReply({ content: "Command not found.", ephemeral: true });
+      return await interaction.editReply({ content: ":x: Command not found.", ephemeral: true });
     }
 
     try {
       await command.execute(interaction);
-      await interaction.editReply({ content: "OK.", ephemeral: true });
+      await interaction.editReply({ content: "ok.", ephemeral: true });
     } catch (e) {
       await interaction.editReply({ content: e.message, ephemeral: true });
     }
