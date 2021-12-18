@@ -1,9 +1,6 @@
 const { MessageActionRow, MessageEmbed } = require("discord.js");
 
-async function buttonInteraction(client, interaction) {
-  if (interaction.user.bot || interaction.user.system) {
-    return;
-  }
+async function totalButtonInteraction(client, interaction) {
   // gets common info
   const guild = client.guilds.cache.get(interaction.message.guildId);
   const reactioner = guild.members.cache.get(interaction.user.id);
@@ -12,7 +9,6 @@ async function buttonInteraction(client, interaction) {
   const embeds = new MessageEmbed(interaction.message.embeds[0]);
   const currentCount = parseInt(embeds.footer.text.split("/")[0]);
   const limitCount = parseInt(embeds.footer.text.split("/")[1]);
-
   // check is answered by the user
   let alreadyPressed = false;
   for (field of embeds.fields) {
@@ -70,6 +66,108 @@ async function buttonInteraction(client, interaction) {
     embeds.footer.text = `${currentCount + 1}/${limitCount}`;
   }
   await interaction.message.edit({ embeds: [embeds] });
+}
+
+async function eachButtonInteraction(client, interaction) {
+  // gets common info
+  const guild = client.guilds.cache.get(interaction.message.guildId);
+  const reactioner = guild.members.cache.get(interaction.user.id);
+  let reactionerNick = reactioner ? reactioner.displayName : reactioner.name;
+  reactionerNick = reactionerNick.replace(",", "，");
+  const embeds = new MessageEmbed(interaction.message.embeds[0]);
+  const currentCount = parseInt(embeds.footer.text.split("/")[0]);
+  const limitCount = parseInt(embeds.footer.text.split("/")[1]);
+  // check is answered by the user
+  let alreadyPressed = false;
+  for (field of embeds.fields) {
+    if (field.value === "-") {
+      continue;
+    }
+    if (field.value.includes(reactionerNick)) {
+      alreadyPressed = true;
+      break;
+    }
+  }
+  if (currentCount < 1 && alreadyPressed) {
+    console.error("something wrong field value.");
+    return;
+  }
+  // find index of press field
+  let fieldIdx = -1;
+  for (var i = 0; i < embeds.fields.length; i += 1) {
+    if (embeds.fields[i]["name"] === interaction.component.label) {
+      fieldIdx = i;
+    }
+  }
+
+  if (alreadyPressed) {
+    // remove user name from field
+    const orgReactions = embeds.fields[fieldIdx].value.split(",");
+    if (!orgReactions.includes(reactionerNick)) {
+      return await interaction.user.send(`${interaction.message.url}\n同時に複数の質問に回答できません。`);
+    }
+    let reactioners = [];
+    reactioners = embeds.fields[fieldIdx].value.split(",").filter((e) => e !== reactionerNick);
+    if (reactioners.length) {
+      embeds.fields[fieldIdx].value = reactioners.join(",");
+    } else {
+      embeds.fields[fieldIdx].value = "-";
+    }
+    // decrements answer count
+    const diff = orgReactions.length - reactioners.length;
+    embeds.footer.text = `${currentCount - diff}/${limitCount}`;
+  } else {
+    // check limit
+    if (currentCount + 1 > limitCount) {
+      return await interaction.user.send(`${interaction.message.url}\nこちらの募集は定員に達していました。`);
+    }
+    // add user name to field
+    let reactioners = [];
+    if (embeds.fields[fieldIdx].value === "-") {
+      reactioners.push(reactionerNick);
+    } else {
+      reactioners = embeds.fields[fieldIdx].value.split(",");
+      reactioners.push(reactionerNick);
+    }
+    embeds.fields[fieldIdx].value = reactioners.join(",");
+    // increments answer count
+    embeds.footer.text = `${currentCount + 1}/${limitCount}`;
+  }
+  await interaction.message.edit({ embeds: [embeds] });
+}
+async function eachButtonInteraction(client, interaction) {}
+
+async function buttonInteraction(client, interaction) {
+  if (interaction.user.bot || interaction.user.system) {
+    return;
+  }
+  // mode check
+  let mode = "";
+  switch (interaction.message.embeds[0].title) {
+    case "[質問毎の人数制限]":
+      totalButtonInteraction(client, interaction);
+      break;
+    case "[質問毎の人数制限]":
+      eachButtonInteraction(client, interaction);
+      break;
+    default:
+      return;
+  }
+
+  console.debug("button pushed.");
+}
+
+async function buttonInteraction(client, interaction) {
+  if (interaction.user.bot || interaction.user.system) {
+    return;
+  }
+  const embedTitle = interaction.message.embeds[0].title;
+  if ("[質問全体での人数制限]" === embedTitle) {
+    await totalButtonInteraction(client, interaction);
+  }
+  if ("[質問毎の人数制限]" === embedTitle) {
+    await eachButtonInteraction(client, interaction);
+  }
   console.debug("button pushed.");
 }
 
