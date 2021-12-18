@@ -63,56 +63,49 @@ async function makeEachPoll(interaction) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("survey")
-    .setDescription("アンケートをスタートする")
+    .setDescription("アンケートをはじめる")
     .addSubcommand((subcommand) =>
       subcommand
         .setName("total")
-        .setDescription("total poll")
-        .addStringOption((option) =>
-          option.setName("title").setDescription("アンケートのタイトル").setRequired(true)
-        )
-        .addIntegerOption((option) => option.setName("limit").setDescription("回答上限").setRequired(true))
-        .addStringOption((option) =>
-          option.setName("choice1").setDescription("アンケート1").setRequired(true)
-        )
-        .addStringOption((option) => option.setName("choice2").setDescription("アンケート2"))
-        .addStringOption((option) => option.setName("choice3").setDescription("アンケート3"))
-        .addStringOption((option) => option.setName("choice4").setDescription("アンケート4"))
-        .addStringOption((option) => option.setName("choice5").setDescription("アンケート5"))
-        .addStringOption((option) => option.setName("choice6").setDescription("アンケート6"))
-        .addStringOption((option) => option.setName("choice7").setDescription("アンケート7"))
-        .addStringOption((option) => option.setName("choice8").setDescription("アンケート8"))
-        .addStringOption((option) => option.setName("choice9").setDescription("アンケート9"))
-    )
-    .addSubcommand((subcommand) =>
-      subcommand
-        .setName("each")
-        .setDescription("アンケート毎の人数制限")
+        .setDescription("全体にわたる回答人数制限があるアンケート")
         .addStringOption((option) =>
           option.setName("title").setDescription("アンケートのタイトル").setRequired(true)
         )
         .addIntegerOption((option) =>
-          option.setName("limit1").setDescription("アンケートへの回答上限1").setRequired(true)
+          option.setName("limit").setDescription("回答人数制限").setRequired(true)
         )
         .addStringOption((option) =>
           option.setName("choice1").setDescription("アンケート1").setRequired(true)
         )
-        .addIntegerOption((option) => option.setName("limit2").setDescription("アンケートへの回答上限2"))
         .addStringOption((option) => option.setName("choice2").setDescription("アンケート2"))
-        .addIntegerOption((option) => option.setName("limit3").setDescription("アンケートへの回答上限3"))
         .addStringOption((option) => option.setName("choice3").setDescription("アンケート3"))
-        .addIntegerOption((option) => option.setName("limit4").setDescription("アンケートへの回答上限4"))
         .addStringOption((option) => option.setName("choice4").setDescription("アンケート4"))
-        .addIntegerOption((option) => option.setName("limit5").setDescription("アンケートへの回答上限5"))
         .addStringOption((option) => option.setName("choice5").setDescription("アンケート5"))
-        .addIntegerOption((option) => option.setName("limit6").setDescription("アンケートへの回答上限6"))
         .addStringOption((option) => option.setName("choice6").setDescription("アンケート6"))
-        .addIntegerOption((option) => option.setName("limit7").setDescription("アンケートへの回答上限7"))
-        .addStringOption((option) => option.setName("choice7").setDescription("アンケート7"))
-        .addIntegerOption((option) => option.setName("limit8").setDescription("アンケートへの回答上限8"))
-        .addStringOption((option) => option.setName("choice8").setDescription("アンケート8"))
-        .addIntegerOption((option) => option.setName("limit9").setDescription("アンケートへの回答上限9"))
-        .addStringOption((option) => option.setName("choice9").setDescription("アンケート9"))
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("each")
+        .setDescription("調査項目それぞれに個別の回答人数制限があるアンケート")
+        .addStringOption((option) =>
+          option.setName("title").setDescription("アンケートのタイトル").setRequired(true)
+        )
+        .addIntegerOption((option) =>
+          option.setName("limit1").setDescription("アンケートへの回答人数制限1").setRequired(true)
+        )
+        .addStringOption((option) =>
+          option.setName("choice1").setDescription("アンケート1").setRequired(true)
+        )
+        .addIntegerOption((option) => option.setName("limit2").setDescription("アンケートへの回答人数制限2"))
+        .addStringOption((option) => option.setName("choice2").setDescription("アンケート2"))
+        .addIntegerOption((option) => option.setName("limit3").setDescription("アンケートへの回答人数制限3"))
+        .addStringOption((option) => option.setName("choice3").setDescription("アンケート3"))
+        .addIntegerOption((option) => option.setName("limit4").setDescription("アンケートへの回答人数制限4"))
+        .addStringOption((option) => option.setName("choice4").setDescription("アンケート4"))
+        .addIntegerOption((option) => option.setName("limit5").setDescription("アンケートへの回答人数制限5"))
+        .addStringOption((option) => option.setName("choice5").setDescription("アンケート5"))
+        .addIntegerOption((option) => option.setName("limit6").setDescription("アンケートへの回答人数制限6"))
+        .addStringOption((option) => option.setName("choice6").setDescription("アンケート6"))
     ),
   async execute(interaction) {
     console.debug("entire execute");

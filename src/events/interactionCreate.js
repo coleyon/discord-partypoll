@@ -51,7 +51,7 @@ async function totalButtonInteraction(client, interaction) {
   } else {
     // check limit
     if (currentCount + 1 > limitCount) {
-      return await interaction.user.send(`:x:${interaction.message.url}\n回答数の上限オーバーです。`);
+      return await interaction.user.send(`:x:${interaction.message.url}\n は回答人数制限オーバーでした。`);
     }
     // add user name to field
     let reactioners = [];
@@ -116,7 +116,7 @@ async function eachButtonInteraction(client, interaction) {
     if (currentCount + 1 > limitCount) {
       const fieldTitle = embeds.fields[fieldIdx].name.split(",")[0];
       return await interaction.user.send(
-        `:x:${interaction.message.url}\nアンケート \`${fieldTitle}\` は回答数の上限オーバーです。`
+        `:x:${interaction.message.url}\nアンケート \`${fieldTitle}\` は回答人数制限オーバーでした。`
       );
     }
     // add user name to field
