@@ -5,7 +5,7 @@ async function totalButtonInteraction(client, interaction) {
   const guild = client.guilds.cache.get(interaction.message.guildId);
   const reactioner = guild.members.cache.get(interaction.user.id);
   let reactionerNick = reactioner ? reactioner.displayName : reactioner.name;
-  reactionerNick = reactionerNick.replace(",", "，");
+  reactionerNick = reactionerNick.replaceAll(",", "，");
   const embeds = new MessageEmbed(interaction.message.embeds[0]);
   const currentCount = parseInt(embeds.footer.text.split("/")[0]);
   const limitCount = parseInt(embeds.footer.text.split("/")[1]);
@@ -24,7 +24,7 @@ async function totalButtonInteraction(client, interaction) {
     console.error("something wrong field value.");
     return;
   }
-  // find index of press field
+  // find index of pressed field
   let fieldIdx = -1;
   for (var i = 0; i < embeds.fields.length; i += 1) {
     if (embeds.fields[i]["name"] === interaction.component.label) {
@@ -73,39 +73,34 @@ async function eachButtonInteraction(client, interaction) {
   const guild = client.guilds.cache.get(interaction.message.guildId);
   const reactioner = guild.members.cache.get(interaction.user.id);
   let reactionerNick = reactioner ? reactioner.displayName : reactioner.name;
-  reactionerNick = reactionerNick.replace(",", "，");
+  reactionerNick = reactionerNick.replaceAll(",", "，");
   const embeds = new MessageEmbed(interaction.message.embeds[0]);
-  const currentCount = parseInt(embeds.footer.text.split("/")[0]);
-  const limitCount = parseInt(embeds.footer.text.split("/")[1]);
+  // find index of pressed field
+  let fieldIdx = -1;
+  for (var i = 0; i < embeds.fields.length; i += 1) {
+    if (embeds.fields[i]["name"].split(",")[0] === interaction.component.label) {
+      fieldIdx = i;
+    }
+  }
+  const fieldLimitArea = embeds.fields[fieldIdx].name.split(",")[1].trim();
+  const currentCount = parseInt(fieldLimitArea.split("/")[0]);
+  const limitCount = parseInt(fieldLimitArea.split("/")[1]);
   // check is answered by the user
   let alreadyPressed = false;
-  for (field of embeds.fields) {
-    if (field.value === "-") {
-      continue;
-    }
-    if (field.value.includes(reactionerNick)) {
-      alreadyPressed = true;
-      break;
-    }
+  if (embeds.fields[fieldIdx].value === "-") {
+    alreadyPressed = false;
+  } else {
+    alreadyPressed = embeds.fields[fieldIdx].value.includes(reactionerNick);
   }
   if (currentCount < 1 && alreadyPressed) {
     console.error("something wrong field value.");
     return;
   }
-  // find index of press field
-  let fieldIdx = -1;
-  for (var i = 0; i < embeds.fields.length; i += 1) {
-    if (embeds.fields[i]["name"] === interaction.component.label) {
-      fieldIdx = i;
-    }
-  }
+  const fieldTitle = embeds.fields[fieldIdx].name.split(",")[0];
 
   if (alreadyPressed) {
     // remove user name from field
     const orgReactions = embeds.fields[fieldIdx].value.split(",");
-    if (!orgReactions.includes(reactionerNick)) {
-      return await interaction.user.send(`${interaction.message.url}\n同時に複数の質問に回答できません。`);
-    }
     let reactioners = [];
     reactioners = embeds.fields[fieldIdx].value.split(",").filter((e) => e !== reactionerNick);
     if (reactioners.length) {
@@ -115,11 +110,14 @@ async function eachButtonInteraction(client, interaction) {
     }
     // decrements answer count
     const diff = orgReactions.length - reactioners.length;
-    embeds.footer.text = `${currentCount - diff}/${limitCount}`;
+    embeds.fields[fieldIdx].name = `${fieldTitle}, ${currentCount - diff}/${limitCount}`;
   } else {
     // check limit
     if (currentCount + 1 > limitCount) {
-      return await interaction.user.send(`${interaction.message.url}\nこちらの募集は定員に達していました。`);
+      const fieldTitle = embeds.fields[fieldIdx].name.split(",")[0];
+      return await interaction.user.send(
+        `${interaction.message.url}\n質問 \`${fieldTitle}\` は定員に達していました。`
+      );
     }
     // add user name to field
     let reactioners = [];
@@ -131,30 +129,9 @@ async function eachButtonInteraction(client, interaction) {
     }
     embeds.fields[fieldIdx].value = reactioners.join(",");
     // increments answer count
-    embeds.footer.text = `${currentCount + 1}/${limitCount}`;
+    embeds.fields[fieldIdx].name = `${fieldTitle}, ${currentCount + 1}/${limitCount}`;
   }
   await interaction.message.edit({ embeds: [embeds] });
-}
-async function eachButtonInteraction(client, interaction) {}
-
-async function buttonInteraction(client, interaction) {
-  if (interaction.user.bot || interaction.user.system) {
-    return;
-  }
-  // mode check
-  let mode = "";
-  switch (interaction.message.embeds[0].title) {
-    case "[質問毎の人数制限]":
-      totalButtonInteraction(client, interaction);
-      break;
-    case "[質問毎の人数制限]":
-      eachButtonInteraction(client, interaction);
-      break;
-    default:
-      return;
-  }
-
-  console.debug("button pushed.");
 }
 
 async function buttonInteraction(client, interaction) {

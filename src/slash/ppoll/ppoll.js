@@ -47,7 +47,8 @@ async function makeEachPoll(interaction) {
   for (optionSet of split(interaction.options._hoistedOptions.slice(1), 2)) {
     const limit = optionSet[0];
     const choice = optionSet[1];
-    if (limit.value && choice.value) {
+    choice.value = choice.value.replaceAll(",", "，");
+    if (Number.isInteger(limit.value) && choice.value) {
       buttons.addComponents(
         new MessageButton()
           .setCustomId(`${interaction.id}_${choice.name}`)
