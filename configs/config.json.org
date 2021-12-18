@@ -1,4 +1,7 @@
 {
-  "TOKEN": "bot_token",
-  "PREFIX": "/"
+  "TOKEN": "token",
+  "PREFIX": "/",
+  "GUILD_ID": "guildid",
+  "IS_GLOBAL": false,
+  "CLIENT_ID": "clientid"
 }
